@@ -76,6 +76,34 @@
     </div>
   </section>
 
+    <section class="game" id="game" aria-label="Simulasi deadlock" hidden>
+    <canvas id="game-canvas"></canvas>
+    <div class="game-alarm"></div>
+    <img class="game-logo" src="assets/logo.png" alt="">
+    <button class="game-exit" id="game-exit" type="button">✕ Keluar</button>
+    <div class="game-hint">↻ Putar HP ke mode landscape agar lebih besar</div>
+    <div class="game-cap" id="game-cap" role="status"></div>
+
+    <div class="ana" id="ana" hidden>
+      <h2>Analisis Deadlock</h2>
+      <div class="ana-row">
+        <span class="tile"><span data-ico="frontA"></span></span>
+        <span class="tile"><span data-ico="wok"></span></span>
+        <span class="pill"><span data-ico="wok"></span><span class="nudge" data-ico="arrowO"></span><span data-ico="stove"></span></span>
+      </div>
+      <div class="ana-row">
+        <span class="tile"><span data-ico="frontB"></span></span>
+        <span class="tile"><span data-ico="stove"></span></span>
+        <span class="pill"><span data-ico="stove"></span><span class="nudge" data-ico="arrowT"></span><span data-ico="wok"></span></span>
+      </div>
+      <p>Koki A memegang Wajan dan menunggu Kompor. Koki B memegang Kompor dan menunggu Wajan. Tidak ada yang mau melepas, jadi keduanya menunggu selamanya: itulah deadlock.</p>
+      <div class="ana-btns">
+        <button class="btn" id="game-replay" type="button">Ulangi</button>
+        <button class="btn" id="game-menu" type="button">Menu</button>
+      </div>
+    </div>
+  </section>
+
   <div class="wash" id="wash"></div>
   <div class="loader" id="loader" role="status" aria-label="Memuat game">
     <img class="loader-logo" id="loader-logo" alt="">
@@ -93,5 +121,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="js/main.js"></script>
 <script src="js/settings.js"></script>
+<script src="js/game.js"></script>
 </body>
 </html>
