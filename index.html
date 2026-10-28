@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#d85b33">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Dapur Macet! – Menu Utama</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<main class="stage" id="stage" data-mode="menu">
+  <canvas id="scene" aria-label="Koki Dapur Macet"></canvas>
+  <div class="alarm"></div>
+
+  <div class="ui">
+    <div class="panel">
+      <h1 class="logo"><img src="assets/logo.png" alt="Dapur Macet!"></h1>
+
+      <nav class="menu" id="menu-main" aria-label="Menu utama">
+        <button class="btn" data-action="play">Mulai Game</button>
+        <button class="btn" data-action="tutorial">Tutorial</button>
+        <button class="btn" data-go="settings">Pengaturan</button>
+      </nav>
+
+      <nav class="menu" id="menu-level" aria-label="Pilih kesulitan" hidden>
+        <button class="btn lv-easy" data-level="Easy">Easy</button>
+        <button class="btn lv-medium" data-level="Medium">Medium</button>
+        <button class="btn lv-hard" data-level="Hard">Hard</button>
+        <button class="back" data-action="back" type="button">‹ Kembali</button>
+      </nav>
+    </div>
+
+    <div class="foot">
+      <button class="chip" id="sfx" type="button" aria-pressed="true">🔊 SFX: ON</button>
+      <button class="chip" id="fs" type="button" hidden>⛶ Layar penuh</button>
+      <span class="ver">v1.0.5 • Warung Sedap</span>
+    </div>
+    <div class="bubble" id="bubble" role="status"></div>
+  </div>
+
+    <section class="settings" id="settings" aria-label="Pengaturan" hidden>
+    <div class="set-scene" aria-hidden="true">
+      <div class="set-dim"></div>
+      <div class="set-glow"></div>
+      <i class="set-steam s1"></i><i class="set-steam s2"></i><i class="set-steam s3"></i>
+    </div>
+    <img class="set-logo" src="assets/logo.png" alt="Dapur Macet!">
+
+    <div class="set-view" id="set-menu">
+      <button class="btn" data-set="sound">Suara</button>
+      <button class="btn" data-set="about">Tentang</button>
+      <button class="back" data-set="back" type="button">‹ Kembali</button>
+    </div>
+
+    <div class="set-view" id="set-sound" hidden>
+      <div class="set-box">
+        <label for="vol-music">Musik</label>
+        <input class="slider" id="vol-music" type="range" min="0" max="100" value="50">
+        <label for="vol-sfx">SFX</label>
+        <input class="slider" id="vol-sfx" type="range" min="0" max="100" value="50">
+      </div>
+      <button class="back" data-set="menu" type="button">‹ Kembali</button>
+    </div>
+
+    <div class="set-view" id="set-about" hidden>
+      <div class="set-box about">
+        <h2>Dapur Macet!</h2>
+        <p>Game simulasi edukatif yang menggabungkan keseruan manajemen dapur dengan konsep penyelesaian masalah deadlock pada Sistem Operasi. Kamu akan berperan sebagai Kepala Dapur yang bertugas mengatur pembagian alat masak (sumber daya) kepada para koki (proses) agar pesanan selesai tepat waktu.</p>
+      </div>
+      <button class="back" data-set="menu" type="button">‹ Kembali</button>
+    </div>
+  </section>
+
+  <div class="wash" id="wash"></div>
+  <div class="loader" id="loader" role="status" aria-label="Memuat game">
+    <img class="loader-logo" id="loader-logo" alt="">
+  </div>
+
+  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="card">
+      <h2 id="modal-title"></h2>
+      <div id="modal-body"></div>
+      <button class="btn" id="modal-close" type="button">Tutup</button>
+    </div>
+  </div>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="js/main.js"></script>
+<script src="js/settings.js"></script>
+</body>
+</html>
