@@ -158,3 +158,47 @@ body { font-family:"Press Start 2P",ui-monospace,monospace; color:var(--ink); us
   .set-box.about { padding:2rem; }
 }
 @media (prefers-reduced-motion:reduce) { .set-scene,.set-glow,.set-steam { animation:none; } }
+
+/* ===== Gameplay ===== */
+.game { position:absolute; inset:0; z-index:16; overflow:hidden; background:#12303a; }
+.game:not([hidden]) { animation:setIn .4s ease both; }
+#game-canvas { position:absolute; inset:0; width:100%; height:100%; display:block; }
+.game-alarm { position:absolute; inset:0; pointer-events:none; opacity:0;
+  background:radial-gradient(ellipse at center,transparent 45%,rgba(200,20,10,.55) 100%); }
+.game.dead:not(.done) .game-alarm { animation:alarm 1.1s ease-in-out infinite; }
+.game-logo { position:absolute; left:calc(2rem + env(safe-area-inset-left)); top:calc(1.5rem + env(safe-area-inset-top)); width:9rem; pointer-events:none; filter:drop-shadow(0 .3rem 0 rgba(0,0,0,.3)); }
+.game-exit { position:absolute; right:calc(2rem + env(safe-area-inset-right)); top:calc(1.5rem + env(safe-area-inset-top)); z-index:3;
+  font:inherit; font-size:max(8px,1.1rem); color:#fff; cursor:pointer; padding:.9rem 1.8rem; background:rgba(27,15,9,.7); border:.2rem solid rgba(255,255,255,.5); border-radius:99px; }
+.game-exit:hover { background:rgba(27,15,9,.9); }
+.game-hint { display:none; position:absolute; top:calc(.8rem + env(safe-area-inset-top)); left:0; right:0; text-align:center; font-family:"VT323",monospace; font-size:max(14px,2.2rem); color:#ffd9a0; pointer-events:none; }
+@media (max-aspect-ratio:1/1) { .game-hint { display:block; } .game-logo { width:7rem; } }
+
+.game-cap { position:absolute; left:50%; bottom:calc(3rem + env(safe-area-inset-bottom)); width:min(92vw,72rem); transform:translateX(-50%); opacity:0; pointer-events:none;
+  padding:.8rem 2rem; text-align:center; font-family:"VT323",monospace; font-size:max(16px,3.2rem); line-height:1.1; color:#fff; text-shadow:.15rem .15rem 0 rgba(0,0,0,.5);
+  background:rgba(27,15,9,.78); border:.25rem solid #f08a2e; border-radius:1.4rem; }
+.game-cap.show { animation:capIn .4s cubic-bezier(.34,1.56,.64,1) both; }
+.game.dead .game-cap { border-color:#ff4a3a; color:#ffd9d2; }
+@keyframes capIn { from { opacity:0; transform:translateX(-50%) translateY(1.2rem) scale(.95); } to { opacity:1; transform:translateX(-50%); } }
+
+/* analisis: ikon diambil dari atlas lewat CSS sprite (diisi game.js) */
+.ico { display:inline-block; flex:none; image-rendering:pixelated; background:url("../assets/game-atlas.png") no-repeat;
+  width:calc(var(--w) * var(--k) * 1rem); height:calc(var(--h) * var(--k) * 1rem);
+  background-size:calc(1024 * var(--k) * 1rem) calc(1024 * var(--k) * 1rem);
+  background-position:calc(var(--x) * var(--k) * -1rem) calc(var(--y) * var(--k) * -1rem); }
+.ana { --k:.06; position:absolute; inset:0; z-index:2; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2.2rem;
+  padding:2rem; background:rgba(34,16,10,.72); overflow:auto; }
+.ana:not([hidden]) { animation:setIn .5s ease both; }
+.ana:not([hidden]) > * { animation:uiPop .5s cubic-bezier(.34,1.56,.64,1) backwards; }
+.ana:not([hidden]) > :nth-child(2) { animation-delay:.15s; } .ana:not([hidden]) > :nth-child(3) { animation-delay:.3s; }
+.ana:not([hidden]) > :nth-child(4) { animation-delay:.45s; } .ana:not([hidden]) > :nth-child(5) { animation-delay:.6s; }
+.ana h2 { margin:0; font-size:max(12px,2.2rem); color:#ffd9a0; text-shadow:.2rem .2rem 0 rgba(0,0,0,.5); text-align:center; }
+.ana-row { display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:2.4rem; }
+.tile { display:grid; place-items:center; width:calc(190rem * var(--k)); height:calc(190rem * var(--k)); background:#1f5d63; border:.5rem solid #f08a2e; border-radius:1.8rem;
+  box-shadow:0 .6rem 0 #a8461a, inset 0 0 0 .3rem #fbd9a0; }
+.pill { display:flex; align-items:center; gap:2.4rem; padding:1.6rem 3.4rem; border-radius:99px; background:rgba(176,72,40,.88); }
+.nudge { animation:nudge 1s ease-in-out infinite; }
+@keyframes nudge { 50% { transform:translateX(.9rem); } }
+.ana p { margin:0; max-width:66rem; text-align:center; font-family:"VT323",monospace; font-size:max(15px,2.8rem); line-height:1.15; color:#fff; text-shadow:.15rem .15rem 0 rgba(0,0,0,.5); }
+.ana-btns { display:flex; gap:2rem; }
+.ana-btns .btn { padding:1.3rem 3rem; font-size:max(9px,1.3rem); }
+@media (max-aspect-ratio:1/1) { .ana { --k:.04; } .ana-btns { flex-direction:column; } }

@@ -83,7 +83,8 @@ document.querySelectorAll("button[data-action]").forEach((b) => b.addEventListen
 document.querySelectorAll("button[data-level]").forEach((b) => b.addEventListener("click", () => {
   const l = b.dataset.level;
   Sfx.confirm();
-  openModal("Mode " + l, `<p style="text-align:center">${LEVELS[l]}</p><p style="text-align:center">Gameplay segera dimulai…</p>`);
+  if (l === "Easy") { startGame(); return; }
+  openModal("Mode " + l, `<p style="text-align:center">${LEVELS[l]}</p><p style="text-align:center">Segera hadir…</p>`);
 }));
 document.querySelectorAll(".btn").forEach((b) => b.addEventListener("mouseenter", () => Sfx.beep(520, "square", .04)));
 $("modal-close").addEventListener("click", closeModal);
@@ -283,7 +284,7 @@ Promise.all([load(ASSETS.bg), load(ASSETS.chef), load(ASSETS.panic)]).then(([bgT
   const clock = new THREE.Clock();
   (function frame() {
     requestAnimationFrame(frame);
-    if (stage.dataset.mode === "settings") { clock.getDelta(); return; }   // hemat baterai
+       if (stage.dataset.mode === "settings" || stage.dataset.mode === "game") { clock.getDelta(); return; }   // hemat baterai  // hemat baterai
     const dt = Math.min(clock.getDelta(), .05), t = clock.elapsedTime;
     p += (target - p) * Math.min(1, dt * 4);
     if (hop > 0) { hop += dt * 1.6; if (hop >= 1) hop = 0; }
