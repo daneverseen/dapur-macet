@@ -111,8 +111,9 @@ async function build() {
   });
   P.cld.forEach((c, i) => {                          // awan pikiran: butuh alat apa
     const g = pivot("cld" + i, c[6], c[7]), ip = .55;
+    const [ix, iy] = [[7, 1], [-8, 9], [7, 5]][i]; // panci tepat di tengah bubble; lainnya koreksi pusat transparansi
     mk("cld" + i + "C", c[0], c[1] - c[6], c[7] - c[2], c[3], { parent: g, rel: 1, flip: c[4], z: 2 });
-    mk("cld" + i + "I", c[5], c[1] - c[6], c[7] - c[2], ip, { parent: g, rel: 1, z: 2.1 });
+    mk("cld" + i + "I", c[5], c[1] - c[6] + ix, c[7] - c[2] + iy, ip, { parent: g, rel: 1, z: 2.1 });
   });
 
   const counterY = 330, counterH = 60, counterGeometry = new THREE.PlaneGeometry(GW, counterH);
