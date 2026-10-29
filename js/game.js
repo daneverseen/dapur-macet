@@ -207,7 +207,7 @@ function reset() {
   game.classList.remove("dead", "done"); ana.hidden = true; cap.classList.remove("show");
   for (const k in S) {
     const o = S[k]; Object.assign(o.userData, { ox: 0, oy: 0, k: 1, a: 1, sx: 1, sy: 1, r: 0, jx: 0, jy: 0 });
-    if (k !== "bg") o.visible = false;
+    if (k !== "bg" && o.parent === gscene) o.visible = false;   // anak (bubble/awan) ikut grup induknya
   }
   U("bg").tint = 0; U("gA").a = 0; U("gB").a = 0; fx.forEach((q) => { q.on = false; });
   clock.getDelta();
