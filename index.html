@@ -104,6 +104,39 @@
     </div>
   </section>
 
+    <section class="game" id="game2" aria-label="Simulasi deadlock Medium" hidden>
+    <canvas id="game2-canvas"></canvas>
+    <div class="game-alarm"></div>
+    <img class="game-logo" src="assets/logo.png" alt="">
+    <button class="game-exit" id="game2-exit" type="button">✕ Keluar</button>
+    <div class="game-hint">↻ Putar HP ke mode landscape agar lebih besar</div>
+    <div class="game-cap" id="game2-cap" role="status"></div>
+
+    <div class="ana ana2" id="ana2" hidden>
+      <h2>Analisis Deadlock</h2>
+      <div class="ana-row">
+        <span class="tile"><span data-ico="frontA"></span></span>
+        <span class="tile"><span data-ico="wok"></span></span>
+        <span class="pill"><span data-ico="wok"></span><span class="nudge" data-ico="arrowO"></span><span data-ico="stove"></span></span>
+      </div>
+      <div class="ana-row">
+        <span class="tile"><span data-ico="frontB"></span></span>
+        <span class="tile"><span data-ico="stove"></span></span>
+        <span class="pill"><span data-ico="stove"></span><span class="nudge" data-ico="arrowT"></span><span data-ico="pot"></span></span>
+      </div>
+      <div class="ana-row">
+        <span class="tile"><span data-ico="frontC"></span></span>
+        <span class="tile"><span data-ico="pot"></span></span>
+        <span class="pill"><span data-ico="pot"></span><span class="nudge" data-ico="arrowT"></span><span data-ico="wok"></span></span>
+      </div>
+      <p>Koki A memegang Wajan dan menunggu Kompor milik B. B memegang Kompor dan menunggu Panci milik C. C memegang Panci dan menunggu Wajan milik A. Rantai tunggu melingkar ini disebut circular wait: itulah deadlock.</p>
+      <div class="ana-btns">
+        <button class="btn" id="game2-replay" type="button">Ulangi</button>
+        <button class="btn" id="game2-menu" type="button">Menu</button>
+      </div>
+    </div>
+  </section>
+
   <div class="wash" id="wash"></div>
   <div class="loader" id="loader" role="status" aria-label="Memuat game">
     <img class="loader-logo" id="loader-logo" alt="">
@@ -122,5 +155,6 @@
 <script src="js/main.js"></script>
 <script src="js/settings.js"></script>
 <script src="js/game.js"></script>
+<script src="js/medium.js"></script>
 </body>
 </html>
