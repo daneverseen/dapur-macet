@@ -84,6 +84,7 @@ document.querySelectorAll("button[data-level]").forEach((b) => b.addEventListene
   const l = b.dataset.level;
   Sfx.confirm();
   if (l === "Easy") { startGame(); return; }
+  if (l === "Medium") { startGame2(); return; }
   openModal("Mode " + l, `<p style="text-align:center">${LEVELS[l]}</p><p style="text-align:center">Segera hadir…</p>`);
 }));
 document.querySelectorAll(".btn").forEach((b) => b.addEventListener("mouseenter", () => Sfx.beep(520, "square", .04)));
