@@ -7,8 +7,8 @@ html,body { height:100%; margin:0; overflow:hidden; overscroll-behavior:none; ba
 body { font-family:"Press Start 2P",ui-monospace,monospace; color:var(--ink); user-select:none; -webkit-user-select:none; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
 
 /* ===== Layar penuh ===== */
-.stage { position:fixed; inset:0; overflow:hidden; background:var(--cream); background-image:url("../assets/bg.webp"); background-position:center center; background-size:cover; background-repeat:no-repeat; }
-.stage.fallback-bg { background-image:url("../assets/bg.webp"); }
+.stage { position:fixed; inset:0; overflow:hidden; background:var(--cream); background-image:url("../assets/bg-main-menu.webp"); background-position:center center; background-size:cover; background-repeat:no-repeat; }
+.stage.fallback-bg { background-image:url("../assets/bg-main-menu.webp"); }
 #scene { position:absolute; inset:0; width:100%; height:100%; display:block; background:transparent; }
 .alarm { position:absolute; inset:0; pointer-events:none; opacity:0;
   background:radial-gradient(ellipse at 60% 55%,transparent 45%,rgba(190,30,15,.5) 100%); }
@@ -107,7 +107,7 @@ body { font-family:"Press Start 2P",ui-monospace,monospace; color:var(--ink); us
 
 /* latar dapur: selalu "cover", efek di dalamnya ikut sejajar dengan gambar */
 .set-scene { position:absolute; left:50%; top:50%; width:max(100vw,calc(100dvh * 1.7903)); aspect-ratio:1289/720;
-  background:url("../assets/settings-bg.webp") center/100% 100% no-repeat; transform:translate(-50%,-50%);
+  background:url("../assets/bg-pengaturan.png") center/100% 100% no-repeat; transform:translate(-50%,-50%);
   animation:setDrift 26s ease-in-out infinite alternate; }
 @keyframes setDrift { from { transform:translate(-50%,-50%) scale(1); } to { transform:translate(-50.8%,-50.4%) scale(1.06); } }
 .set-dim { position:absolute; inset:0; background:rgba(208,192,198,.55); }          /* tampilan pudar seperti mockup */

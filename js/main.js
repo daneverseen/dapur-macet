@@ -135,7 +135,7 @@ const sceneReady = new Promise((r) => { sceneReadyResolve = r; });
 /* ============================================================
    4. Scene Three.js: latar, 2 sprite koki (mesh di-warp), partikel
    ============================================================ */
-const ASSETS = { bg: "assets/bg.webp", chef: "assets/chef.png", panic: "assets/chef-panic.png" };
+const ASSETS = { bg: "assets/bg-main-menu.webp", chef: "assets/chef.png", panic: "assets/chef-panic.png" };
 const BG_W = 1376, BG_H = 768;
 // aspect = lebar/tinggi sprite; bowl & head = titik 0..1 dari pojok kiri-atas sprite
 const CHEF_A = { aspect: .6702, bowl: [.2657, .5963], head: [.5, .4] };
