@@ -80,13 +80,16 @@ document.querySelectorAll("button[data-action]").forEach((b) => b.addEventListen
   if (a === "back") setMode("menu");
   else openModal(SCREENS[a].title, SCREENS[a].html);
 }));
+
 document.querySelectorAll("button[data-level]").forEach((b) => b.addEventListener("click", () => {
   const l = b.dataset.level;
   Sfx.confirm();
   if (l === "Easy") { startGame(); return; }
   if (l === "Medium") { startGame2(); return; }
+  if (l === "Hard") { startGame3(); return; }
   openModal("Mode " + l, `<p style="text-align:center">${LEVELS[l]}</p><p style="text-align:center">Segera hadir…</p>`);
 }));
+
 document.querySelectorAll(".btn").forEach((b) => b.addEventListener("mouseenter", () => Sfx.beep(520, "square", .04)));
 $("modal-close").addEventListener("click", closeModal);
 modal.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
