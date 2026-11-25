@@ -1,0 +1,13 @@
+{
+  "name": "dapur-macet",
+  "version": "1.3.0",
+  "private": true,
+  "description": "Game edukasi deadlock dengan tiga match di Easy, Medium, dan Hard",
+  "scripts": {
+    "test": "node --test tests/easy.test.cjs tests/medium.test.cjs tests/hard.test.cjs",
+    "start": "node tools/serve.cjs",
+    "test:browser": "node tests/browser-smoke.cjs",
+    "test:easy-browser": "node tests/easy-browser.cjs",
+    "test:hard-browser": "node tests/hard-browser.cjs"
+  }
+}

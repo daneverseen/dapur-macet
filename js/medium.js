@@ -1,252 +1,252 @@
 "use strict";
-/* ============================================================
-   Gameplay Medium: simulasi deadlock 3 koki, 3 alat (circular wait)
-   Hanya ditonton, gaya sama seperti Easy. Memakai $, stage, Sfx, load,
-   puffTex, rnd, AMP, setMode dari main.js.
-   Koordinat desain 1280x720 (y ke bawah). Semua sprite dari medium-atlas.png
-   ============================================================ */
+/* Navigasi dan UI Medium. Aturan ada di medium-state.js; animasi lama di medium-match1.js. */
 (() => {
-const GW = 1280, GH = 720, AW = 1400, AH = 705;
-const ATLAS = {"manC":{"r":[839,341,127,146],"a":[62.0,144.0]},"pairC":{"r":[968,341,179,144],"a":[86.5,142.0]},"manP":{"r":[706,341,131,149],"a":[65.0,147.0]},"pairP":{"r":[0,341,224,157],"a":[120.5,155.0]},"c1":{"r":[1149,341,91,133],"a":[45.5,133.0]},"c2":{"r":[0,500,90,131],"a":[45.0,131.0]},"c3":{"r":[1242,341,94,133],"a":[47.0,133.0]},"curry":{"r":[0,633,92,70],"a":[46.0,35.0]},"frontB":{"r":[260,500,74,125],"a":[37.0,125.0]},"frontC":{"r":[336,500,71,121],"a":[35.5,121.0]},"cycle":{"r":[0,0,330,339],"a":[165.0,169.5]},"hourglass":{"r":[378,341,162,150],"a":[81.0,75.0]},"warning":{"r":[542,341,162,150],"a":[81.0,75.0]},"bubble":{"r":[409,500,167,118],"a":[83.5,59.0]},"boom":{"r":[578,500,114,112],"a":[57.0,56.0]},"debris":{"r":[1100,500,177,93],"a":[88.5,46.5]},"spark":{"r":[230,633,47,47],"a":[23.5,23.5]},"arrowT":{"r":[94,633,66,51],"a":[33.0,25.5]},"arrowO":{"r":[162,633,66,51],"a":[33.0,25.5]},"wok":{"r":[694,500,144,104],"a":[72.0,52.0]},"stove":{"r":[840,500,144,104],"a":[72.0,52.0]},"pot":{"r":[226,341,150,151],"a":[75.0,75.5]},"ramen":{"r":[986,500,112,102],"a":[56.0,51.0]},"chicken":{"r":[1279,500,103,93],"a":[51.5,46.5]},"cloudA":{"r":[630,0,266,198],"a":[133.0,99.0]},"cloudB":{"r":[332,0,296,221],"a":[148.0,110.5]},"cloudC":{"r":[898,0,266,198],"a":[133.0,99.0]},"frontA":{"r":[92,500,166,131],"a":[83.0,65.5]},"tile":{"r":[1166,0,169,175],"a":[84.5,87.5]}};   // k: { r:[x,y,w,h] di atlas, a:[ax,ay] titik tumpu dalam sprite }
+  const R = window.MediumRules, shell = $("game2"), content = $("medium-content");
+  const dialog = $("medium-dialog"), KEY = "dapurMacet.medium.v1";
+  const chefImages = { A: "assets/match3/Koki Tampak Depan.png", B: "assets/medium/chef-hijab.png", C: "assets/medium/chef-woman.png" };
+  const backImages = { A: "assets/medium/chef-man-back.png", B: "assets/Koki Tampak Belakang (3).png", C: "assets/Koki Tampak Belakang (2).png" };
+  const toolImages = { wok: "assets/match3/Alat Dapur-1.png", stove: "assets/match3/Alat Dapur-2.png", pot: "assets/match3/Alat Dapur.png" };
+  const titles = ["", "Tanpa Penanganan", "Bergantian Barang", "Cancel 1 Pelanggan"];
+  const escape = text => String(text).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const pic = (src, cls = "", alt = "") => `<img src="${src}" class="${cls}" alt="${alt}">`;
+  const rating = score => "★".repeat(R.stars(score)) + "☆".repeat(3 - R.stars(score));
+  let view = "selector", state = null, currentMatch = 1, busy = false, timer, generation = 0;
+  let closeAction = null, lastFocus = null, m1Finished = false, m1Wrong = 0;
+  let results = readResults();
 
-const game = $("game2"), cap = $("game2-cap"), ana = $("ana2"), gcv = $("game2-canvas");
-let gr, gscene, gcam, atlasTex, bgMat, built = false, running = false, raf = 0;
-let T = 0, ei = 0, dotsOn = false, fxOn = false, fxT = 0, rumble = 0, angry = 0;
-const S = {}, tweens = [], dots = [], fx = [], clock = new THREE.Clock();
-const U = (k) => S[k].userData;
-
-/* ---------- tween mini ---------- */
-const E = { out: (p) => 1 - (1 - p) ** 3, io: (p) => p < .5 ? 2 * p * p : 1 - (-2 * p + 2) ** 2 / 2,
-            back: (p) => 1 + 2.70158 * (p - 1) ** 3 + 1.70158 * (p - 1) ** 2 };
-const tw = (o, k, to, dur, e = "out", delay = 0) => tweens.push({ o, k, to, dur, e, t: -delay });
-const stepTweens = (dt) => {
-  for (let i = tweens.length - 1; i >= 0; i--) {
-    const w = tweens[i]; w.t += dt;
-    if (w.t < 0) continue;
-    if (w.from === undefined) w.from = w.o[w.k];
-    const p = Math.min(1, w.t / w.dur);
-    w.o[w.k] = w.from + (w.to - w.from) * E[w.e](p);
-    if (p >= 1) tweens.splice(i, 1);
+  function readResults() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(KEY)), clean = {};
+      for (const match of [1, 2, 3]) {
+        const r = raw?.[match];
+        if (!r || r.match !== match || !["won", "lost"].includes(r.status)) continue;
+        if (![r.score, r.correct, r.wrong, r.served, r.cancelled].every(v => Number.isInteger(v) && v >= 0) || r.score > 100) continue;
+        if (!Array.isArray(r.log)) continue;
+        clean[match] = { ...r, stars: R.stars(r.score), log: r.log.filter(i => i && typeof i.text === "string" && ["info", "correct", "wrong"].includes(i.kind)).slice(-300) };
+      }
+      return clean;
+    } catch (_) { return {}; }
   }
-};
-
-/* ---------- sprite dari atlas (titik tumpu = ATLAS[name].a) ---------- */
-function uvQuad(name) {
-  const { r: [x, y, w, h], a: [ax, ay] } = ATLAS[name], g = new THREE.PlaneGeometry(1, 1);
-  const u0 = x / AW, u1 = (x + w) / AW, v1 = 1 - y / AH, v0 = 1 - (y + h) / AH;
-  g.attributes.uv.set([u0, v1, u1, v1, u0, v0, u1, v0]);
-  g.translate(.5 - ax / w, ay / h - .5, 0);          // titik tumpu jadi origin
-  return g;
-}
-function mk(key, name, x, y, s = 1, o = {}) {        // x,y desain; o.rel = relatif ke parent (y ke atas)
-  const [, , w, h] = ATLAS[name].r;
-  const m = new THREE.Mesh(uvQuad(name), new THREE.MeshBasicMaterial({ map: atlasTex, transparent: true, depthWrite: false }));
-  m.renderOrder = o.z || 1; m.position.z = o.z || 1;
-  Object.assign(m.userData, { bx: x, by: o.rel ? y : GH - y, w: w * s, h: h * s, fx: o.flip ? -1 : 1, ox: 0, oy: 0, k: 1, a: 1, sx: 1, sy: 1, r: 0, jx: 0, jy: 0 });
-  (o.parent || gscene).add(m); S[key] = m; return m;
-}
-function pivot(key, x, y, z = 2) {
-  const g = new THREE.Object3D(); g.position.z = z;
-  Object.assign(g.userData, { bx: x, by: GH - y, group: true, ox: 0, oy: 0, k: 1, a: 1, sx: 1, sy: 1, r: 0, jx: 0, jy: 0 });
-  gscene.add(g); S[key] = g; return g;
-}
-function glow(key, x, y, size, color) {
-  const m = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: puffTex, color, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
-  m.renderOrder = m.position.z = 1.2;
-  Object.assign(m.userData, { bx: x, by: GH - y, w: size, h: size, fx: 1, ox: 0, oy: 0, k: 1, a: 0, sx: 1, sy: 1, r: 0, jx: 0, jy: 0 });
-  gscene.add(m); S[key] = m;
-}
-function sync() {
-  for (const k in S) {
-    const o = S[k], u = o.userData, sx = u.k * u.sx, sy = u.k * u.sy;
-    o.position.x = u.bx + u.ox + u.jx; o.position.y = u.by + u.oy + u.jy; o.rotation.z = u.r;
-    if (u.group) o.scale.set(sx, sy, 1);
-    else { o.scale.set(u.w * u.fx * sx, u.h * sy, 1); o.material.opacity = u.a; }
+  function save(result) {
+    results[result.match] = result;
+    try { localStorage.setItem(KEY, JSON.stringify(results)); } catch (_) { /* Penyimpanan privat: hasil tetap tersedia selama sesi. */ }
   }
-}
-
-/* ---------- posisi hasil mencocokkan dengan frame Medium_x ---------- */
-const P = {
-  man: [123, 632], pair: [954.5, 657],
-  cust: [[372.5, 345], [640, 345], [957, 345]],
-  bub: [[436, 185, .97], [688, 189, .93], [1021, 184, 1]],
-  food: [["ramen", 439, 176, .75], ["curry", 694, 177, 1], ["chicken", 1023, 171, .9]],
-  wok: [261, 476, .79], pot: [1008, 458, .75], stove: [857, 488],
-  cld: [["cloudA", 180, 445, .7, 0, "stove", 115, 510], ["cloudB", 810, 445, .62, 1, "pot", 890, 510], ["cloudC", 1090, 445, .65, 0, "wok", 1010, 510]],
-  badge: [604, 650], cycle: [530, 465, .9]
-};
-// jalur titik "menunggu": A->kompor, B->panci, C->wajan (kurva bezier kuadrat)
-const PATHS = [[[300, 440], [560, 335], [800, 440], 0xf08a2e], [[900, 435], [955, 380], [1005, 420], 0x27c4c9], [[1010, 400], [640, 250], [262, 420], 0xe0507a]];
-
-/* ---------- bangun scene (sekali) ---------- */
-async function build() {
-  const [bg, atlas] = await Promise.all([load("assets/medium-bg.webp"), load("assets/medium-atlas.png")]);
-  atlas.magFilter = THREE.NearestFilter;
-  atlas.minFilter = THREE.NearestFilter;
-  atlas.generateMipmaps = false;
-  atlas.needsUpdate = true;
-  atlasTex = atlas;
-  gr = new THREE.WebGLRenderer({ canvas: gcv, antialias: true });
-  gr.setPixelRatio(Math.min(devicePixelRatio, 2)); gr.setClearColor(0x2a1a14);
-  gscene = new THREE.Scene();
-  gcam = new THREE.OrthographicCamera(0, 1, 1, 0, .1, 20); gcam.position.z = 10;
-  addEventListener("resize", fit);
-
-  bgMat = new THREE.MeshBasicMaterial({ map: bg });
-  const b = new THREE.Mesh(new THREE.PlaneGeometry(GW, GH), bgMat);
-  Object.assign(b.userData, { bx: GW / 2, by: GH / 2, group: true, ox: 0, oy: 0, k: 1, a: 1, sx: 1, sy: 1, r: 0, jx: 0, jy: 0, tint: 0 });
-  gscene.add(b); S.bg = b;
-  fit();
-
-  mk("manC", "manC", ...P.man, 1, { z: 1.5 }); mk("manP", "manP", ...P.man, 1, { z: 1.5 });
-  mk("pairC", "pairC", ...P.pair, 1, { z: 1.5 }); mk("pairP", "pairP", ...P.pair, 1, { z: 1.5 });
-  P.cust.forEach((c, i) => mk("cust" + i, "c" + (i + 1), c[0], c[1], 1, { z: 1 }));
-  mk("wok", "wok", ...P.wok, { z: 1.4 }); mk("pot", "pot", ...P.pot, { z: 1.4 });
-  glow("gA", P.wok[0], P.wok[1], 240, 0xf08a2e); glow("gB", P.stove[0], P.stove[1], 290, 0x27c4c9); glow("gC", P.pot[0], P.pot[1], 230, 0xe0507a);
-
-  P.bub.forEach((c, i) => {                          // bubble pesanan, pop dari ujung ekor
-    const gx = c[0] - 27, gy = c[1] + 58, g = pivot("ord" + i, gx, gy), f = P.food[i];
-    mk("ord" + i + "B", "bubble", c[0] - gx, gy - c[1], c[2], { parent: g, rel: 1, z: 2 });
-    mk("ord" + i + "F", f[0], f[1] - gx, gy - f[2], f[3], { parent: g, rel: 1, z: 2.1 });
-  });
-  P.cld.forEach((c, i) => {                          // awan pikiran: butuh alat apa
-    const g = pivot("cld" + i, c[6], c[7]), ip = .55;
-    const [ix, iy] = [[7, 1], [-8, 9], [7, 5]][i]; // panci tepat di tengah bubble; lainnya koreksi pusat transparansi
-    mk("cld" + i + "C", c[0], c[1] - c[6], c[7] - c[2], c[3], { parent: g, rel: 1, flip: c[4], z: 2 });
-    mk("cld" + i + "I", c[5], c[1] - c[6] + ix, c[7] - c[2] + iy, ip, { parent: g, rel: 1, z: 2.1 });
-  });
-
-  const counterY = 330, counterH = 60, counterGeometry = new THREE.PlaneGeometry(GW, counterH);
-  counterGeometry.attributes.uv.set([0, 1 - counterY / GH, 1, 1 - counterY / GH, 0, 1 - (counterY + counterH) / GH, 1, 1 - (counterY + counterH) / GH]);
-  const counter = new THREE.Mesh(counterGeometry, bgMat);
-  counter.position.set(GW / 2, GH - counterY - counterH / 2, 1.8);
-  counter.renderOrder = 1.8;
-  gscene.add(counter);
-
-  mk("hg", "hourglass", ...P.badge, 1, { z: 3 });
-  mk("wn", "warning", ...P.badge, 1, { z: 3 });
-  mk("cyc", "cycle", ...P.cycle, { z: 3 });
-  for (let i = 0; i < 27; i++) {                     // 3 jalur x 9 titik menunggu
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: puffTex, color: PATHS[(i / 9) | 0][3], transparent: true, depthWrite: false }));
-    m.renderOrder = 3; m.visible = false; gscene.add(m); dots.push(m);
+  function cleanup() {
+    generation++; clearTimeout(timer); busy = false;
+    window.MediumMatch1.halt();
+    dialog.hidden = true; closeAction = null;
+    $("ana2").hidden = true; $("medium-m1-controls").hidden = true;
+    $("game2-cap").classList.remove("show"); shell.classList.remove("dead", "done");
   }
-  ["boom", "boom", "boom", "boom", "spark", "spark", "spark", "debris", "debris"].forEach((n, i) => {
-    fx.push({ m: mk("fx" + i, n, 0, 0, 1, { z: 5 }), n, age: 0, life: 1, on: false });
-  });
-  game.querySelectorAll("[data-ico]").forEach((el) => {   // ikon layar analisis (CSS sprite)
-    const [x, y, w, h] = ATLAS[el.dataset.ico].r;
-    el.classList.add("ico", "ico2"); el.style.cssText = `--x:${x};--y:${y};--w:${w};--h:${h}`;
-  });
-  built = true;
-}
-function fit() {                                     // "contain": seluruh adegan selalu terlihat
-  const w = innerWidth, h = innerHeight, s = Math.min(w / GW, h / GH), hw = w / s / 2, hh = h / s / 2;
-  gr.setSize(w, h, false);
-  Object.assign(gcam, { left: GW / 2 - hw, right: GW / 2 + hw, top: GH / 2 + hh, bottom: GH / 2 - hh });
-  gcam.updateProjectionMatrix();
-  if (S.bg) { S.bg.userData.sx = (gcam.right - gcam.left) / GW; S.bg.userData.sy = (gcam.top - gcam.bottom) / GH; }
-}
-
-/* ---------- helper timeline ---------- */
-const say = (t) => { cap.textContent = t; cap.classList.remove("show"); void cap.offsetWidth; cap.classList.add("show"); };
-const pop = (k, delay = 0, from = 0) => { const o = S[k]; o.visible = true; o.userData.k = from; tw(o.userData, "k", 1, .5, "back", delay); };
-const swap = (a, b) => { S[a].visible = false; pop(b, 0, .6); };
-const drop = (k) => { const o = S[k], u = o.userData; o.visible = true; u.oy = 250; u.a = 0; tw(u, "oy", 0, .8, "back"); tw(u, "a", 1, .25); };
-const lit = (k) => { const o = S[k]; o.visible = true; o.userData.a = 0; tw(o.userData, "a", .8, .6); };
-
-const TL = [
-  [.3,   () => say("Mode Medium: tiga koki, tiga alat. Perhatikan siapa menunggu siapa.")],
-  [1.2,  () => { pop("manC"); pop("pairC", .15); Sfx.beep(440, "triangle", .1); say("Tiga koki siap bekerja di dapur.")}],
-  [3.0,  () => { [0, 1, 2].forEach((i) => pop("cust" + i, i * .15)); Sfx.confirm(); say("Tiga pelanggan datang dan memesan makanan.")}],
-  [4.2,  () => { pop("ord0"); Sfx.beep(660, "square", .08); }],
-  [4.8,  () => { pop("ord1"); Sfx.beep(700, "square", .08); }],
-  [5.4,  () => { pop("ord2"); Sfx.beep(740, "square", .08); }],
-  [7.0,  () => { drop("wok"); lit("gA"); Sfx.beep(220, "square", .12); say("Koki A mengambil Wajan dan memegangnya."); }],
-  [9.0,  () => { lit("gB"); Sfx.beep(180, "square", .12); say("Koki B sudah memegang Kompor."); }],
-  [11.0, () => { drop("pot"); lit("gC"); Sfx.beep(200, "square", .12); say("Koki C mengambil Panci dan memegangnya."); }],
-  [13.2, () => { swap("manC", "manP"); swap("pairC", "pairP"); pop("cld0"); pop("cld1", .3); pop("cld2", .6); Sfx.beep(330, "sawtooth", .25); say("A butuh Kompor, B butuh Panci, C butuh Wajan. Tak ada yang mau melepas."); }],
-  [16.5, () => { dotsOn = true; say("A menunggu B, B menunggu C, C menunggu A... berputar tanpa ujung."); }],
-  [20.0, () => { pop("hg"); say("Waktu berjalan, ketiga pesanan tak kunjung jadi."); }],
-  [24.0, () => { S.hg.visible = false; pop("wn"); angry = 1; tw(U("bg"), "tint", .35, 1.2, "io"); Sfx.alarm(); say("Pelanggan mulai kesal!"); }],
-  [27.0, () => { S.wn.visible = false; pop("cyc"); tw(U("bg"), "tint", 1, 1, "io"); rumble = 2.5; fxOn = true; game.classList.add("dead"); Sfx.alarm(); say("DEADLOCK! Circular wait: tiga koki saling menunggu tanpa akhir."); }],
-  [34.0, () => { ana.hidden = false; game.classList.add("done"); cap.classList.remove("show"); Sfx.confirm(); }]
-];
-
-/* ---------- animasi yang selalu jalan ---------- */
-const SPOTS = [[1190, 135], [1105, 142], [70, 160], [40, 300], [1235, 330], [640, 70], [330, 95], [520, 470], [900, 330]];
-const bez = (p, t) => { const a = (1 - t) ** 2, b = 2 * (1 - t) * t, c = t * t; return [a * p[0][0] + b * p[1][0] + c * p[2][0], a * p[0][1] + b * p[1][1] + c * p[2][1]]; };
-function animate(t, dt) {
-  const A = AMP;
-  [["manC", 0], ["pairC", 1]].forEach(([k, i]) => { const a = U(k); a.sy = 1 + Math.sin(t * 2.2 + i) * .01 * A; a.jx = Math.sin(t * 1.4 + i) * 1.2 * A; a.r = Math.sin(t * 1.4 + i) * .008 * A; });
-  [["manP", 0], ["pairP", 1]].forEach(([k, i]) => { const p = U(k); p.sy = 1 + Math.sin(t * 9 + i) * .014 * A; p.jx = Math.sin(t * 38 + i * 2) * 1.8 * A; p.r = Math.sin(t * 7 + i) * .022 * A; });
-  [0, 1, 2].forEach((i) => {
-    const c = U("cust" + i); c.sy = 1 + Math.sin(t * 2.4 + i) * .012 * A;
-    c.jx = angry ? Math.sin(t * 31 + i) * 1.6 * A : 0; if (angry) c.sy += Math.sin(t * 6 + i) * .02 * A;
-    S["cust" + i].material.color.setRGB(1, 1 - .35 * angry * U("bg").tint, 1 - .4 * angry * U("bg").tint);     // wajah memerah saat kesal
-    U("ord" + i).r = Math.sin(t * 3 + i * 2) * (angry ? .05 : .018) * A;
-    U("cld" + i).jy = Math.sin(t * 2 + i * 1.7) * 4 * A;
-  });
-  const h = U("hg"), f = Math.min(1, (t % 2.4) / .6);                       // jam pasir terbalik tiap 2,4 dtk
-  h.r = Math.PI * (Math.floor(t / 2.4) + E.io(f)); h.sx = h.sy = 1 + Math.sin(t * 4) * .04;
-  const w = U("wn"); w.r = Math.sin(t * 10) * .06 * A; w.sx = w.sy = 1 + Math.abs(Math.sin(t * 5)) * .1;
-  const c = U("cyc"); c.r = -t * .7; c.sx = c.sy = 1 + Math.sin(t * 3) * .05;
-  ["gA", "gB", "gC"].forEach((k, i) => { U(k).sx = U(k).sy = 1 + Math.sin(t * 3 + i) * .1; });
-
-  dots.forEach((m, i) => {                           // 3 garis titik berputar, memudar sebelum sampai
-    m.visible = dotsOn; if (!dotsOn) return;
-    const pa = PATHS[(i / 9) | 0], fr = (t * .32 + (i % 9) / 9) % 1, [x, y] = bez(pa, fr);
-    m.position.set(x, GH - y + Math.sin(t * 5 + i) * 2, 3);
-    m.scale.setScalar(Math.max(2, 20 * (1 - Math.max(0, (fr - .8) / .2))));
-    m.material.opacity = Math.min(1, fr * 6);
-  });
-
-  if (fxOn && (fxT -= dt) <= 0) {                    // ledakan acak setelah deadlock
-    fxT = rnd(.2, .5);
-    const [x, y] = SPOTS[Math.floor(rnd(0, SPOTS.length))], n = ["boom", "spark", "debris"][Math.floor(rnd(0, 3))];
-    const q = fx.find((v) => !v.on && v.n === n);
-    if (q) { Object.assign(q, { on: true, age: 0, life: rnd(.6, 1) }); Object.assign(q.m.userData, { bx: x, by: GH - y }); q.m.visible = true; if (Math.random() < .5) Sfx.beep(rnd(60, 110), "sawtooth", .2); }
+  function location(text) { $("medium-location").textContent = text; }
+  function setView(next) {
+    cleanup(); view = next;
+    shell.dataset.view = next;
+    $("game2-canvas").hidden = next !== "match1";
+    content.hidden = next === "match1";
   }
-  fx.forEach((q) => {
-    if (!q.on) return;
-    q.age += dt; const p = q.age / q.life, u = q.m.userData;
-    if (p >= 1) { q.on = false; q.m.visible = false; return; }
-    u.k = .4 + .9 * E.out(Math.min(1, p * 3)); u.a = p < .55 ? 1 : 1 - (p - .55) / .45; u.oy = q.n === "debris" ? -p * 50 : 0;
-  });
-
-  const tn = U("bg").tint; bgMat.color.setRGB(1 - .38 * tn, 1 - .55 * tn, 1 - .55 * tn);                    // latar memerah
-  const amp = rumble * A; gcam.position.set(rnd(-1, 1) * amp, rnd(-1, 1) * amp, 10);                        // layar bergetar
-}
-
-/* ---------- kontrol ---------- */
-function reset() {
-  tweens.length = 0; T = 0; ei = 0; dotsOn = false; fxOn = false; fxT = 0; rumble = 0; angry = 0;
-  game.classList.remove("dead", "done"); ana.hidden = true; cap.classList.remove("show");
-  for (const k in S) {
-    const o = S[k]; Object.assign(o.userData, { ox: 0, oy: 0, k: 1, a: 1, sx: 1, sy: 1, r: 0, jx: 0, jy: 0 });
-    if (k !== "bg" && o.parent === gscene) o.visible = false;   // anak (bubble/awan) ikut grup induknya
+  function focusContent() { content.querySelector("h1, h2")?.focus({ preventScroll: true }); }
+  function status(r) { return !r ? "Belum dimainkan" : r.status === "won" ? "Berhasil · Siklus terputus" : "Gagal · Deadlock"; }
+  function selector() {
+    setView("selector"); location("Pilih match");
+    content.innerHTML = `<div class="medium-heading"><span class="medium-eyebrow">TIGA MATCH · SATU DAPUR</span><h1 tabindex="-1">Putus rantai tunggunya!</h1><p>Amati deadlock, pinjamkan alat, lalu bandingkan dengan membatalkan satu pesanan.</p></div>
+      <div class="medium-match-cards">${[1, 2, 3].map(match => {
+        const r = results[match];
+        return `<article class="medium-match-card"><div class="medium-card-art">${pic(`assets/${match === 1 ? "medium-preview.png" : `match${match}/Medium ${match === 2 ? "14" : "24"}.png`}`)}<span>MATCH ${match}</span></div><div class="medium-card-copy"><h2>${titles[match]}</h2><p>${["", "Tiga koki menahan alat. Apakah menunggu saja cukup?", "Pinjamkan Kompor ke Cowo, lalu gunakan alat secara bergantian.", "Pilih satu korban dengan biaya terendah. Selamatkan dua pesanan lain."][match]}</p><div class="medium-card-status">${status(r)}${r ? `<b>${match === 1 ? "0 / 3 terlayani" : `${r.score}/100 · ${rating(r.score)}`}</b>` : ""}</div><button class="btn" data-play="${match}">${r ? "Ulangi" : "Mulai"} Match ${match} →</button></div></article>`;
+      }).join("")}</div><p class="medium-save-note">Hasil percobaan terakhir disimpan di browser ini. Kamu boleh memilih atau mengulang match mana pun.</p>`;
+    focusContent();
   }
-  U("bg").tint = 0; ["gA", "gB", "gC"].forEach((k) => { U(k).a = 0; }); fx.forEach((q) => { q.on = false; });
-  clock.getDelta(); fit();
-}
-function frame() {
-  if (!running) return;
-  raf = requestAnimationFrame(frame);
-  const dt = Math.min(clock.getDelta(), .05); T += dt;
-  while (ei < TL.length && T >= TL[ei][0]) TL[ei++][1]();
-  stepTweens(dt); animate(T, dt); sync(); gr.render(gscene, gcam);
-}
-async function start() {
-  game.hidden = false; stage.dataset.mode = "game";
-  if (!built) await build();
-  reset(); running = true; frame();
-}
-function stop() {
-  running = false; cancelAnimationFrame(raf); game.hidden = true; setMode("level");
-}
-window.startGame2 = start;
-
-$("game2-exit").addEventListener("click", () => { Sfx.confirm(); stop(); });
-$("game2-menu").addEventListener("click", () => { Sfx.confirm(); stop(); });
-$("game2-replay").addEventListener("click", () => { Sfx.confirm(); reset(); });
-document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !game.hidden) stop(); });
+  function showDialog(title, html, { ok = true, icon = ok ? "✓" : "!", button = "Lanjutkan", after = null, settings = false } = {}) {
+    lastFocus = document.activeElement;
+    window.MediumMatch1.pause(true);
+    $("medium-dialog-title").textContent = title;
+    $("medium-dialog-copy").innerHTML = html;
+    $("medium-dialog-icon").textContent = icon;
+    dialog.dataset.tone = ok ? "correct" : "wrong";
+    $("medium-dialog-actions").innerHTML = `<button class="btn" data-medium="close-dialog">${button}</button>`;
+    closeAction = after; dialog.hidden = false;
+    if (settings) wireSliders();
+    dialog.querySelector("button").focus();
+  }
+  function closeDialog() {
+    if (dialog.hidden) return;
+    dialog.hidden = true;
+    const after = closeAction; closeAction = null;
+    window.MediumMatch1.pause(false);
+    if (after) after();
+    if (lastFocus?.isConnected && !lastFocus.closest("[hidden]") && !lastFocus.disabled) lastFocus.focus({ preventScroll: true });
+    else if (!shell.hidden) (view === "match1" ? $("game2-replay") : content.querySelector("button"))?.focus({ preventScroll: true });
+  }
+  async function play(match) {
+    setView(match === 1 ? "match1" : "play"); currentMatch = match;
+    location(`Match ${match} · ${titles[match]}`);
+    if (match === 1) {
+      m1Finished = false; m1Wrong = 0;
+      const controls = $("medium-m1-controls"); controls.hidden = false;
+      controls.querySelector('[data-medium="observe"]').hidden = false;
+      $("medium-m1-choices").hidden = true;
+      try {
+        await window.MediumMatch1.start({
+          onDecision() { if (m1Finished) return; controls.querySelector('[data-medium="observe"]').hidden = true; $("medium-m1-choices").hidden = false; },
+          onDone() {
+            if (m1Finished) return;
+            m1Finished = true; controls.hidden = true;
+            save({ match: 1, status: "lost", score: 0, stars: 1, correct: 0, wrong: m1Wrong, served: 0, cancelled: 0,
+              log: [{ kind: "wrong", text: "Circular wait A → B → C → A tetap tertutup. Setiap koki menahan satu alat sambil menunggu alat lain (hold and wait). Tidak ada penanganan." }] });
+            $("game2-replay").focus({ preventScroll: true });
+          }
+        });
+      } catch (_) {
+        if (view !== "match1") return;
+        // Jika WebGL tidak tersedia, papan DOM tetap bisa mengajarkan kondisi dan keputusan yang sama.
+        content.hidden = false; $("game2-canvas").hidden = true;
+        content.innerHTML = `<div class="medium-heading"><h1 tabindex="-1">Match 1 · Circular Wait</h1><p>Ketiga koki menahan alat. Tanpa preemption atau pembatalan, permintaan baru tetap terblokir.</p></div>${graph({ owners: { wok: "A", stove: "B", pot: "C" }, done: [], cancelled: [] })}`;
+        controls.querySelector('[data-medium="observe"]').hidden = true; $("medium-m1-choices").hidden = false;
+      }
+    } else { state = R.create(match); renderPlay(); focusContent(); }
+  }
+  function m1Decision(action) {
+    if (m1Finished) return;
+    m1Wrong++;
+    showDialog("Salah · Dapur tetap macet", `<p>${action === "m1-wait" ? "Menunggu lebih lama" : "Meminta Kompor tanpa mengambil atau melepas alat"} tidak mengubah kepemilikan alat. Cowo menahan Katel, Hijab menahan Kompor, dan Tanpa Hijab menahan Panci.</p><p>Hold and wait dan circular wait tetap terjadi. Match 1 sengaja tidak memiliki mekanisme pemulihan.</p>`, {
+      ok: false, button: "Lihat hasil Match 1", after() {
+        window.MediumMatch1.advance(34);
+        if (!m1Finished) { // Fallback DOM tanpa WebGL.
+          m1Finished = true; $("medium-m1-controls").hidden = true; $("ana2").hidden = false;
+          save({ match: 1, status: "lost", score: 0, stars: 1, correct: 0, wrong: m1Wrong, served: 0, cancelled: 0,
+            log: [{ kind: "wrong", text: "Tanpa penanganan, hold and wait dan circular wait terus berlangsung." }] });
+        }
+      }
+    });
+  }
+  function graph(s) {
+    const ids = ["A", "B", "C"], tools = ["wok", "stove", "pot"], y = [42, 126, 210];
+    let paths = "";
+    tools.forEach((tool, i) => {
+      const owner = s.owners[tool];
+      if (owner) paths += `<path class="hold-edge" d="M 410 ${y[i]+8} L 158 ${y[ids.indexOf(owner)]+8}" marker-end="url(#hold-head)"/>`;
+    });
+    ids.forEach((id, i) => {
+      if (s.done.includes(id) || s.cancelled.includes(id)) return;
+      const need = R.CHEFS[id].need;
+      if (s.owners[need] !== id) paths += `<path class="wait-edge" d="M 158 ${y[i]-8} L 410 ${y[tools.indexOf(need)]-8}" marker-end="url(#wait-head)"/>`;
+    });
+    return `<div class="medium-graph" role="img" aria-label="Graf kepemilikan alat. Garis oranye dari alat ke koki berarti memegang; garis putus teal dari koki ke alat berarti menunggu."><svg viewBox="0 0 570 253" aria-hidden="true"><defs><marker id="hold-head" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0 0 L7 3.5 L0 7Z" fill="#d5652f"/></marker><marker id="wait-head" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0 0 L7 3.5 L0 7Z" fill="#247c80"/></marker></defs>${paths}</svg>
+      ${ids.map((id, i) => `<div class="graph-chef" style="top:${i*33.2+3}%">${pic(chefImages[id])}<span>${id} · ${R.CHEFS[id].short}</span></div>`).join("")}
+      ${tools.map((t, i) => `<div class="graph-tool" style="top:${i*33.2+3}%">${pic(toolImages[t])}<span>${R.TOOLS[t]}<small>${s.owners[t] ? `di ${R.CHEFS[s.owners[t]].short}` : "Bebas"}</small></span></div>`).join("")}</div><div class="graph-legend"><span>╌→ Menunggu</span><span>━→ Memegang</span></div>`;
+  }
+  function notify() {
+    if (state.status === "won") return "Semua pesanan aktif sudah terlayani. Alat kembali bebas; circular wait berhasil diputus!";
+    if (state.phase === "cancel") return "Notifikasi: ketiga koki saling menunggu. Batalkan satu pesanan dengan biaya terendah: pelanggan 3, progres 0%.";
+    const id = R.expected(state), c = R.CHEFS[id], owner = state.owners[c.need];
+    if (state.phase === "cooking") return `Alat lengkap! ${c.name} siap memasak. Selesaikan pesanan dan lepaskan alat untuk koki berikutnya.`;
+    return `Notifikasi: ${c.name} membutuhkan ${R.TOOLS[c.need]}${owner && owner !== id ? ` dari ${R.CHEFS[owner].name}` : " yang sudah bebas"}!`;
+  }
+  function renderPlay() {
+    const s = state, ids = ["A", "B", "C"], complete = s.phase === "complete";
+    content.innerHTML = `<div class="medium-play-heading"><div><span class="medium-eyebrow">MATCH ${s.match} / 3</span><h1 tabindex="-1">${titles[s.match]}</h1></div><div class="medium-score" aria-live="polite"><b>${R.score(s)}<small>/100</small></b><span>${s.done.length}/${s.match === 2 ? 3 : 2} terlayani · ${s.correct} benar · ${s.wrong} salah</span></div></div>
+      <div class="medium-notice" role="status" aria-live="polite"><span aria-hidden="true">!</span><p>${notify()}</p></div>
+      <div class="medium-play-layout"><div class="medium-workspace"><div class="medium-kitchen ${s.match === 3 ? "termination" : ""}">
+        <div class="medium-customers">${ids.map((id, i) => {
+          const done = s.done.includes(id), cancelled = s.cancelled.includes(id);
+          const names = s.match === 2 ? ["Ramen", "Kari", "Ayam"] : ["Kue", "Es krim", "Minuman"];
+          return `<article class="medium-customer ${done ? "served" : cancelled ? "cancelled" : ""}"><div class="medium-order">${pic(`assets/medium/food-${s.match}-${i+1}.png`)}<span>P${i+1} · ${names[i]}</span>${s.match === 3 ? `<small>${[80,60,0][i]}% persiapan${i === 2 ? " · terakhir masuk" : ""}</small>` : ""}</div>${pic(`assets/medium/customer-${i+1}.png`, "customer-sprite")}<span class="order-status">${done ? "✓ Terlayani" : cancelled ? "✕ Dibatalkan" : "Menunggu"}</span>${s.phase === "cancel" ? `<button class="medium-cancel" data-cancel="${i+1}">Cancel Pelanggan ${i+1}</button>` : ""}</article>`;
+        }).join("")}</div>
+        <div class="medium-counter" aria-hidden="true"></div><div class="medium-chefs">${ids.map(id => {
+          const done = s.done.includes(id), cancelled = s.cancelled.includes(id), held = Object.keys(s.owners).filter(t => s.owners[t] === id);
+          return `<button class="medium-chef ${s.selected === id ? "selected" : ""} ${done || cancelled ? "inactive" : ""}" data-chef="${id}" aria-pressed="${s.selected === id}" ${done || cancelled || s.phase === "cancel" || s.phase === "cooking" ? "disabled" : ""}>
+            <span class="chef-thought">${done ? "✓ Selesai" : cancelled ? "Pesanan dibatalkan" : `Butuh ${R.TOOLS[R.CHEFS[id].need]}`}</span>${pic(backImages[id], "chef-sprite")}<strong>${id} · ${R.CHEFS[id].short}</strong><small>${held.length ? held.map(t => R.TOOLS[t]).join(" + ") : "Tidak memegang alat"}</small></button>`;
+        }).join("")}</div></div>
+        <div class="medium-action-panel"><div class="medium-step"><b>${complete ? "Selesai!" : s.phase === "cancel" ? "1. Pilih korban" : s.phase === "cooking" ? "3. Masak & lepaskan" : s.selected ? "2. Berikan alat" : "1. Pilih koki"}</b><span>${complete ? "Semua alat kembali bebas." : s.phase === "cancel" ? "Kriteria: biaya pembatalan paling rendah." : s.phase === "cooking" ? "Pelanggan dilayani setelah tombol memasak ditekan." : s.match === 2 && s.step === 0 ? "Wajib mulai dari Koki Cowo → Kompor." : `Giliran ${R.CHEFS[R.expected(s)].short}.`}</span></div>
+        ${complete ? '<p class="medium-action-note">Lanjutkan ke hasil untuk melihat skor dan bintang.</p>' : s.phase === "cooking" ? `<button class="btn medium-cook" data-medium="cook">Masak & Lepaskan Alat →</button>` : s.phase === "cancel" ? `<p class="medium-action-note">Klik Cancel pada kartu pelanggan di atas.</p>` : `<div class="medium-tool-buttons">${Object.keys(R.TOOLS).map(t => `<button data-tool="${t}" ${!s.selected ? "disabled" : ""}>${pic(toolImages[t])}<span>Berikan ${R.TOOLS[t]}</span></button>`).join("")}</div>`}</div>
+      </div><aside class="medium-side"><section class="medium-map"><h2>Peta Alat</h2>${graph(s)}</section><section class="medium-log"><h2>${pic("assets/match3/Ikon Log Keputusan.png")}Log Keputusan <small>${s.log.length}</small></h2><ol>${s.log.map(l => `<li class="${l.kind}">${escape(l.text)}</li>`).join("")}</ol></section></aside></div>`;
+    const log = content.querySelector(".medium-log ol"); if (log) log.scrollTop = log.scrollHeight;
+  }
+  function validate(result) {
+    if (!result) { renderPlay(); return; }
+    renderPlay();
+    const text = `<p>${escape(result.text)}</p><div class="medium-points">${result.ok ? "+" : ""}${result.delta} poin · Skor ${result.score}/100</div>${!result.ok ? "<small>Kesalahan mengurangi skor akhir sebanyak 15 poin, termasuk saat skor sementara masih 0.</small>" : ""}`;
+    showDialog(result.ok ? "Betul / Benar!" : "Salah!", text, { ok: result.ok,
+      button: result.fatal ? "Lihat Game Over" : state.status === "won" ? "Lihat Hasil" : "Lanjutkan", after() {
+        if (["won", "lost"].includes(state.status)) { save(R.summary(state)); renderResult(); }
+      }
+    });
+  }
+  function renderResult() {
+    const r = results[currentMatch]; setView("result"); location(`Hasil Match ${currentMatch}`);
+    content.innerHTML = `<div class="medium-result"><span class="medium-eyebrow">MATCH ${currentMatch} · ${titles[currentMatch]}</span><h1 tabindex="-1">${r.status === "won" ? "Dapur lancar kembali!" : "Game Over · Dapur Macet"}</h1><div class="medium-stars" aria-label="${r.stars} bintang">${rating(r.score)}</div><div class="medium-final-score">${r.score}<small>/100</small></div><p>${r.status === "lost" ? "Koki Cowo tetap menunggu Kompor. Aturan awal belum terpenuhi; circular wait tidak terputus." : currentMatch === 2 ? "Tiga pelanggan terlayani. Preemption memindahkan Kompor sementara; alat lalu dipakai bergantian tanpa membatalkan pesanan." : "Dua pelanggan terlayani, satu dibatalkan. Process termination melepas alat milik korban dan membuka jalan bagi pesanan lain."}</p><div class="medium-result-stats"><span><b>${r.correct}</b> langkah benar</span><span><b>${r.wrong}</b> langkah salah</span><span><b>${r.served}</b> terlayani</span><span><b>${r.cancelled}</b> dibatalkan</span></div><p class="medium-rating-note">100 = ★★★ · 50–99 = ★★☆ · 0–49 = ★☆☆</p><div class="medium-result-buttons"><button class="btn" data-play="${currentMatch}">↻ Ulangi Match</button><button class="btn" data-medium="${currentMatch === 2 ? "next3" : "compare"}">${currentMatch === 2 ? "Lanjut Match 3 →" : "Perbandingan 3 Match →"}</button><button class="medium-plain" data-medium="selector">Pilih Match</button>${currentMatch === 2 ? '<button class="medium-plain" data-medium="compare">Lihat Perbandingan</button>' : ""}</div></div>`;
+    focusContent();
+  }
+  function compare() {
+    setView("compare"); location("Perbandingan 3 Match");
+    content.innerHTML = `<div class="medium-heading"><span class="medium-eyebrow">APA YANG BERUBAH?</span><h1 tabindex="-1">Perbandingan Penanganan Deadlock</h1><p>Hasil nyata percobaan terakhir. Match yang belum selesai tetap ditandai belum dimainkan.</p></div><div class="medium-comparison-wrap"><table class="medium-comparison"><caption>Hasil tiga match Medium</caption><thead><tr><th>Strategi</th><th>Match 1<br>Tanpa Penanganan</th><th>Match 2<br>Bergantian Barang</th><th>Match 3<br>Cancel 1 Pelanggan</th></tr></thead><tbody>
+      <tr><th>Status</th>${[1,2,3].map(m => `<td class="${results[m]?.status || ""}">${status(results[m])}</td>`).join("")}</tr>
+      <tr><th>Pelanggan</th>${[1,2,3].map(m => `<td>${results[m] ? `${results[m].served} terlayani · ${results[m].cancelled} dibatalkan` : "—"}</td>`).join("")}</tr>
+      <tr><th>Langkah benar / salah</th>${[1,2,3].map(m => `<td>${results[m] ? `${results[m].correct} / ${results[m].wrong}` : "—"}</td>`).join("")}</tr>
+      <tr><th>Skor & bintang</th>${[1,2,3].map(m => `<td>${results[m] ? m === 1 ? "0/100 · Deadlock" : `<b>${results[m].score}/100</b><span class="medium-table-stars">${rating(results[m].score)}</span>` : "—"}</td>`).join("")}</tr>
+      <tr><th>Cara kerja</th><td>Hold and wait berlanjut. Circular wait tidak diputus; semua proses tertahan.</td><td>Kompor diambil sementara dari Hijab untuk Cowo. Urutan Cowo → Tanpa Hijab → Hijab membebaskan alat satu per satu.</td><td>Hentikan pesanan pelanggan 3 (progres 0%). Panci bebas; Hijab → Cowo menyelesaikan dua pesanan tersisa.</td></tr>
+      <tr><th>Efektivitas & biaya</th><td>Tidak ada kemajuan; tidak ada biaya pemulihan yang dilakukan.</td><td>Menyelamatkan semua 3 pesanan, dengan 3 pemindahan alat dan tanpa pembatalan.</td><td>Memerlukan 1 pembatalan dan 2 pemindahan alat. Dua pesanan selamat, satu pesanan dikorbankan. Lebih sedikit langkah, ada kehilangan layanan.</td></tr>
+      <tr><th>Main kembali</th>${[1,2,3].map(m => `<td><button class="medium-plain" data-play="${m}">Main Match ${m} →</button></td>`).join("")}</tr>
+      </tbody></table></div><details class="medium-comparison-log"><summary>${pic("assets/match3/Ikon Log Keputusan.png")} Log Keputusan Match 3 (${results[3]?.log.length || 0})</summary>${results[3] ? `<ol>${results[3].log.map(l => `<li class="${l.kind}">${escape(l.text)}</li>`).join("")}</ol>` : "<p>Selesaikan Match 3 untuk melihat log keputusan.</p>"}</details><p class="medium-save-note">Aturan khusus skenario: Match 2 wajib mulai dari Cowo. Pada sistem operasi umum, urutan aman dan korban dapat berbeda bergantung alokasi serta biaya pemulihan.</p><div class="medium-compare-actions"><button class="btn" data-medium="selector">← Pilih Match</button><button class="medium-plain" data-medium="exit">Kembali ke Pilih Level</button></div>`;
+    focusContent();
+  }
+  function settingsDialog() {
+    showDialog("Pengaturan Suara", `<p>Atur volume tanpa meninggalkan match.</p><label class="medium-volume">Musik <input id="medium-music-volume" type="range" min="0" max="100" value="${Math.round(Music.volume*100)}"></label><label class="medium-volume">SFX <input id="medium-sfx-volume" type="range" min="0" max="100" value="${Math.round(Sfx.volume*100)}"></label>`, { icon: "♫", settings: true, button: "Kembali ke Game" });
+  }
+  function syncAudio() { const on = Sfx.volume > 0; $("medium-audio").textContent = on ? "SFX ON" : "SFX OFF"; $("medium-audio").setAttribute("aria-pressed", String(on)); }
+  function wireSliders() {
+    $("medium-music-volume").addEventListener("input", e => { Music.set(Number(e.target.value)/100); Music.start(); saveAudio(); });
+    $("medium-sfx-volume").addEventListener("input", e => { Sfx.setVolume(Number(e.target.value)/100); syncChip(); syncAudio(); saveAudio(); });
+  }
+  function exit() { cleanup(); shell.hidden = true; setMode("level"); $("menu-level").querySelector('[data-level="Medium"]').focus(); }
+  function cook() {
+    if (busy || state?.phase !== "cooking") return;
+    busy = true; const token = generation;
+    const button = content.querySelector(".medium-cook"); button.disabled = true; button.textContent = "Memasak…";
+    content.querySelector(".medium-kitchen").classList.add("is-cooking");
+    timer = setTimeout(() => {
+      if (generation !== token) return;
+      busy = false; validate(R.cook(state));
+    }, reduceMotion ? 100 : 850);
+  }
+  function handleClick(e) {
+    const button = e.target.closest("button"); if (!button || button.disabled) return;
+    const action = button.dataset.medium;
+    if (!dialog.hidden) { if (action === "close-dialog") closeDialog(); return; }
+    if (action === "audio") { $("sfx").click(); syncAudio(); return; }
+    Sfx.confirm();
+    if (action === "exit") return exit();
+    if (action === "settings") { if (!busy) settingsDialog(); return; }
+    if (action === "selector") return selector();
+    if (action === "compare") return compare();
+    if (action === "next2") return play(2);
+    if (action === "next3") return play(3);
+    if (action === "observe") return window.MediumMatch1.advance(16.5);
+    if (action?.startsWith("m1-")) return m1Decision(action);
+    if (button.dataset.play) return play(Number(button.dataset.play));
+    if (busy || view !== "play") return;
+    if (button.dataset.chef) return validate(R.select(state, button.dataset.chef));
+    if (button.dataset.tool) return validate(R.transfer(state, button.dataset.tool));
+    if (button.dataset.cancel) return validate(R.cancel(state, Number(button.dataset.cancel)));
+    if (action === "cook") cook();
+  }
+  shell.addEventListener("click", handleClick); dialog.addEventListener("click", handleClick);
+  // Tinggi toolbar mengikuti pembungkusan tombol pada perangkat kecil.
+  new ResizeObserver(([entry]) => {
+    if (entry.target.offsetHeight) shell.style.setProperty("--medium-header", `${entry.target.offsetHeight}px`);
+  }).observe(shell.querySelector(".medium-toolbar"));
+  $("game2-replay").addEventListener("click", () => play(1));
+  $("game2-menu").addEventListener("click", selector);
+  document.addEventListener("keydown", e => {
+    if (shell.hidden) return;
+    if (!dialog.hidden) {
+      if (e.key === "Escape") { e.preventDefault(); closeDialog(); }
+      if (e.key === "Tab") {
+        const all = Array.from(dialog.querySelectorAll("button, input")), first = all[0], last = all[all.length-1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    } else if (e.key === "Escape") { e.preventDefault(); view === "selector" ? exit() : selector(); }
+  });
+  window.startGame2 = () => { shell.hidden = false; stage.dataset.mode = "game"; syncAudio(); selector(); };
 })();

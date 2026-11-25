@@ -1,237 +1,189 @@
 "use strict";
-/* ============================================================
-   Gameplay Easy: simulasi deadlock (hanya ditonton, tanpa input)
-   Memakai $, stage, Sfx, load, puffTex, rnd, AMP, setMode dari main.js
-   Koordinat desain 1280x720 (y ke bawah), semua sprite dari game-atlas.png
-   ============================================================ */
+/* Orkestrator Easy. Animasi lama di easy-match1.js; aturan/timer di easy-state.js. */
 (() => {
-const GW = 1280, GH = 720, AW = 1024, AH = 1024;
-const ATLAS = {"cycle":[2,2,330,339],"chefA0":[334,2,231,285],"chefA1":[567,2,231,285],"chefB0":[2,343,231,250],"chefB1":[235,343,231,250],"cloud":[468,343,252,208],"hourglass":[722,343,162,150],"warning":[2,595,162,150],"frontA":[166,595,68,137],"frontB":[236,595,76,136],"custA0":[314,595,134,128],"custB0":[450,595,134,128],"custA1":[586,595,134,128],"custB1":[722,595,134,128],"bubble":[2,747,167,118],"boom":[171,747,114,112],"stove":[287,747,144,104],"wok":[433,747,144,104],"debris":[579,747,177,93],"hotdog":[758,747,149,85],"waffle":[2,867,135,77],"arrowT":[139,867,66,51],"arrowO":[207,867,66,51],"spark":[275,867,47,47]};
-// posisi hasil mencocokkan ikon dengan frame Easy_x: [x, y, skala]  (b = titik bawah-tengah, lainnya titik tengah)
-const POS = {"chefA":[187,691,1.009],"chefB":[986,692,0.988],"custA":[370,329,1.037],"custB":[863,330,1.089],"wok":[320,465,1.021],"cloudL":[126,329,0.997],"cloudR":[1093,318,1.216],"stoveC":[97,324,1.029],"wokC":[1128,305,0.96],"hourglass":[607,645,0.992],"warning":[607,646,0.996],"cycle":[635,366,0.923],"hotdog":[494,179,0.998],"waffle":[989,181,0.87],"bubbleR":[986,190],"bubbleL":[490,190]};
-
-const game = $("game"), cap = $("game-cap"), ana = $("ana"), gcv = $("game-canvas");
-let gr, gscene, gcam, atlasTex, bgMat, built = false, running = false, raf = 0;
-let T = 0, ei = 0, dotsOn = false, fxOn = false, fxT = 0, rumble = 0;
-const S = {}, tweens = [], dots = [], fx = [], clock = new THREE.Clock();
-const U = (k) => S[k].userData;
-
-/* ---------- tween mini ---------- */
-const E = { out: (p) => 1 - (1 - p) ** 3, io: (p) => p < .5 ? 2 * p * p : 1 - (-2 * p + 2) ** 2 / 2,
-            back: (p) => 1 + 2.70158 * (p - 1) ** 3 + 1.70158 * (p - 1) ** 2 };
-const tw = (o, k, to, dur, e = "out", delay = 0) => tweens.push({ o, k, to, dur, e, t: -delay });
-const stepTweens = (dt) => {
-  for (let i = tweens.length - 1; i >= 0; i--) {
-    const w = tweens[i]; w.t += dt;
-    if (w.t < 0) continue;
-    if (w.from === undefined) w.from = w.o[w.k];
-    const p = Math.min(1, w.t / w.dur);
-    w.o[w.k] = w.from + (w.to - w.from) * E[w.e](p);
-    if (p >= 1) tweens.splice(i, 1);
+  const R=window.EasyRules, Selection=window.EasySelection, shell=$("game"), content=$("easy-content"), dialog=$("easy-dialog");
+  const KEY="dapurMacet.easy.results.v1", titles=["","Tanpa Penanganan","Urutan & Strategi","Izin Peminjaman"];
+  const toolImages={wok:"assets/wajan.png",stove:"assets/kompor.png"};
+  const escape=value=>String(value).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const image=(src,cls="",alt="")=>`<img src="${src}" class="${cls}" alt="${alt}">`;
+  const stars=value=>"★".repeat(R.stars(value))+"☆".repeat(3-R.stars(value));
+  let view="setup",state=null,match=1,raf=0,lastTime=0,afterDialog=null,dialogKind="feedback",lastFocus=null,generation=0;
+  const results=readResults();
+  function readResults(){
+    try{
+      const raw=JSON.parse(localStorage.getItem(KEY)),out={};
+      for(const m of [1,2,3]){
+        const r=raw?.[m];
+        if(!r||r.match!==m||!["won","lost"].includes(r.status)||R.cleanTeam(r.team).length!==2)continue;
+        if(![r.score,r.correct,r.wrong,r.served,r.escaped,r.unserved,r.accuracy].every(n=>Number.isFinite(n)&&n>=0)||r.score>100||r.accuracy>100)continue;
+        if(!Array.isArray(r.log))continue;
+        out[m]={...r,team:R.cleanTeam(r.team),stars:R.stars(r.score),log:r.log.filter(l=>l&&typeof l.text==="string"&&["info","correct","wrong"].includes(l.kind)).slice(-200)};
+      }
+      return out;
+    }catch(_){return {};}
   }
-};
-
-/* ---------- pembuat sprite dari atlas ---------- */
-function uvQuad(name, bottom) {
-  const [x, y, w, h] = ATLAS[name], g = new THREE.PlaneGeometry(1, 1);
-  const u0 = x / AW, u1 = (x + w) / AW, v1 = 1 - y / AH, v0 = 1 - (y + h) / AH;
-  g.attributes.uv.set([u0, v1, u1, v1, u0, v0, u1, v0]);
-  if (bottom) g.translate(0, .5, 0);                 // titik tumpu di kaki
-  return g;
-}
-function mk(key, name, x, y, s = 1, o = {}) {        // x,y koordinat desain; o.rel = koordinat relatif ke parent (y ke atas)
-  const [, , w, h] = ATLAS[name];
-  const m = new THREE.Mesh(uvQuad(name, o.bottom), new THREE.MeshBasicMaterial({ map: atlasTex, transparent: true, depthWrite: false }));
-  m.renderOrder = o.z || 1; m.position.z = o.z || 1;
-  Object.assign(m.userData, { bx: x, by: o.rel ? y : GH - y, w: w * s, h: h * s, fx: o.flip ? -1 : 1, ox: 0, oy: 0, k: 1, a: 1, sx: 1, sy: 1, r: 0, jx: 0, jy: 0 });
-  (o.parent || gscene).add(m); S[key] = m; return m;
-}
-function pivot(key, x, y, z = 2) {                   // Object3D sebagai titik tumpu animasi pop
-  const g = new THREE.Object3D(); g.position.z = z;
-  Object.assign(g.userData, { bx: x, by: GH - y, group: true, ox: 0, oy: 0, k: 1, a: 1, sx: 1, sy: 1, r: 0, jx: 0, jy: 0 });
-  gscene.add(g); S[key] = g; return g;
-}
-function glow(key, x, y, size, color) {
-  const m = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: puffTex, color, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
-  m.renderOrder = m.position.z = 1.2;
-  Object.assign(m.userData, { bx: x, by: GH - y, w: size, h: size, fx: 1, ox: 0, oy: 0, k: 1, a: 0, sx: 1, sy: 1, r: 0, jx: 0, jy: 0 });
-  gscene.add(m); S[key] = m;
-}
-function sync() {                                    // salin state animasi (userData) ke objek three
-  for (const k in S) {
-    const o = S[k], u = o.userData, sx = u.k * u.sx, sy = u.k * u.sy;
-    o.position.x = u.bx + u.ox + u.jx; o.position.y = u.by + u.oy + u.jy; o.rotation.z = u.r;
-    if (u.group) o.scale.set(sx, sy, 1);
-    else { o.scale.set(u.w * u.fx * sx, u.h * sy, 1); o.material.opacity = u.a; }
+  function save(){results[match]=R.summary(state);try{localStorage.setItem(KEY,JSON.stringify(results));}catch(_){}}
+  function cleanup(){
+    generation++;cancelAnimationFrame(raf);window.EasyMatch1.halt();dialog.hidden=true;afterDialog=null;
+    $("ana").hidden=true;$("game-cap").classList.remove("show");shell.classList.remove("dead","done");
+    $("easy-skip").hidden=true;$("easy-m1-team").hidden=true;
   }
-}
-
-/* ---------- bangun scene (sekali) ---------- */
-async function build() {
-  const [bg, atlas] = await Promise.all([load("assets/game-bg.webp"), load("assets/game-atlas.png")]);
-  atlasTex = atlas;
-  gr = new THREE.WebGLRenderer({ canvas: gcv, antialias: true });
-  gr.setPixelRatio(Math.min(devicePixelRatio, 2)); gr.setClearColor(0x12303a);
-  gscene = new THREE.Scene();
-  gcam = new THREE.OrthographicCamera(0, 1, 1, 0, .1, 20); gcam.position.z = 10;
-  addEventListener("resize", fit); fit();
-
-  bgMat = new THREE.MeshBasicMaterial({ map: bg });
-  const b = new THREE.Mesh(new THREE.PlaneGeometry(GW, GH), bgMat);
-  Object.assign(b.userData, { bx: GW / 2, by: GH / 2, group: true, ox: 0, oy: 0, k: 1, a: 1, sx: 1, sy: 1, r: 0, jx: 0, jy: 0, tint: 0 });
-  gscene.add(b); S.bg = b;
-  fit();
-
-  const P = POS;
-  ["chefA", "chefB"].forEach((c) => { mk(c + "0", c + "0", P[c][0], P[c][1], P[c][2], { bottom: 1, z: 1.5 }); mk(c + "1", c + "1", P[c][0], P[c][1], P[c][2], { bottom: 1, z: 1.5 }); });
-  ["custA", "custB"].forEach((c) => { mk(c + "0", c + "0", P[c][0], P[c][1], P[c][2], { bottom: 1, z: 1 }); mk(c + "1", c + "1", P[c][0], P[c][1], P[c][2], { bottom: 1, z: 1 }); });
-  mk("wok", "wok", P.wok[0], P.wok[1], P.wok[2], { z: 1.4 });
-  glow("gA", P.wok[0], P.wok[1], 240, 0xf08a2e); glow("gB", 882, 512, 270, 0x27c4c9);
-
-  const order = (key, c, food, id) => {              // bubble pesanan, pop dari ujung ekor
-    const gx = c[0] - 83, gy = c[1] + 59, g = pivot(key, gx, gy);
-    mk(key + "B", "bubble", c[0] - gx, gy - c[1], 1, { parent: g, rel: 1, z: 2 });
-    mk(key + "F", id, food[0] - gx, gy - food[1], food[2], { parent: g, rel: 1, z: 2.1 });
-  };
-  order("ordL", P.bubbleL, P.hotdog, "hotdog"); order("ordR", P.bubbleR, P.waffle, "waffle");
-
-  const cloud = (key, c, pv, flip, item, ip) => {    // awan pikiran, pop dari ujung ekor
-    const g = pivot(key, pv[0], pv[1]);
-    mk(key + "C", "cloud", c[0] - pv[0], pv[1] - c[1], c[2], { parent: g, rel: 1, flip, z: 2 });
-    mk(key + "I", item, ip[0] - pv[0], pv[1] - ip[1], ip[2], { parent: g, rel: 1, z: 2.1 });
-  };
-  cloud("cldL", P.cloudL, [186, 391], 0, "stove", P.stoveC); cloud("cldR", P.cloudR, [1033, 380], 1, "wok", P.wokC);
-
-  mk("hg", "hourglass", ...P.hourglass.slice(0, 2), P.hourglass[2], { z: 3 });
-  mk("wn", "warning", P.warning[0], P.warning[1], P.warning[2], { z: 3 });
-  mk("cyc", "cycle", P.cycle[0], P.cycle[1], P.cycle[2], { z: 3 });
-  mk("arA", "arrowO", 800, 394, .8, { z: 3 }); mk("arB", "arrowT", 388, 418, .8, { flip: 1, z: 3 });
-  for (let i = 0; i < 18; i++) {                     // titik "menunggu" yang tidak pernah sampai
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: puffTex, color: i < 9 ? 0xf08a2e : 0x27c4c9, transparent: true, depthWrite: false }));
-    m.renderOrder = 3; m.visible = false; gscene.add(m); dots.push(m);
+  function setView(next){cleanup();view=next;shell.dataset.easyView=next;content.hidden=next==="match1";$("game-canvas").hidden=next!=="match1";content.scrollTop=0;}
+  function location(text){$("easy-location").textContent=text;}
+  function focus(){content.querySelector("h1")?.focus({preventScroll:true});}
+  function teamLine(team=Selection.team){return team.map((id,i)=>`${R.CHARACTERS[id].name} (Koki ${i?"B":"A"})`).join(" & ");}
+  function setup(){
+    setView("setup");location("Persiapan Dapur");
+    content.innerHTML=`<div class="easy-heading"><span class="easy-eyebrow">SEBELUM MEMBUKA DAPUR</span><h1 tabindex="-1">Siapkan dua kokimu!</h1><p>Pilih maksimal dua karakter. Urutan pilihan menentukan Koki A dan Koki B di semua match Easy.</p></div>
+      <div class="easy-preparation"><section class="easy-paper"><h2>Pemilihan Karakter</h2><p>Klik kartu untuk memilih atau membatalkan. Pilihan ketiga tidak akan ditambahkan.</p><div class="easy-character-options" role="group" aria-label="Pilih maksimal dua koki">${Object.entries(R.CHARACTERS).map(([id,c])=>`<button data-easy-character="${id}" aria-pressed="false">${image(c.image,"",c.name)}<span>${c.name}</span></button>`).join("")}</div><button class="btn" data-team-confirm>Konfirmasi Karakter</button><p class="easy-team-status" data-team-status role="status" aria-live="polite"></p></section>
+      <section class="easy-paper"><h2>Pemilihan Barang</h2><p>Pilih alat yang ingin kamu kenali lebih dulu.</p><div class="easy-item-options" role="group" aria-label="Barang fokus tutorial">${[["Wajan","assets/wajan.png"],["Panci","assets/panci.png"],["Kompor","assets/kompor.png"]].map(([label,src])=>`<button data-easy-item="${label}" aria-pressed="false">${image(src)}<span>${label}</span></button>`).join("")}</div><p class="easy-small">Pilihan ini menjadi fokus pengamatan. Alokasi skenario Easy tetap: A memegang Katel dan B memegang Kompor.</p><p class="easy-small">Jika hanya satu karakter dipilih, konfirmasi akan menambahkan satu pasangan default yang berbeda.</p></section></div>
+      <div class="easy-actions"><button class="btn" data-easy="ready" data-team-confirm>Gunakan Tim & Pilih Match →</button></div>`;
+    Selection.sync();focus();
   }
-  ["boom", "boom", "boom", "spark", "spark", "spark", "debris", "debris"].forEach((n, i) => {
-    fx.push({ m: mk("fx" + i, n, 0, 0, 1, { z: 5 }), n, age: 0, life: 1, on: false });
-  });
-
-  game.querySelectorAll("[data-ico]").forEach((el) => {   // ikon layar analisis (CSS sprite)
-    const [x, y, w, h] = ATLAS[el.dataset.ico];
-    el.classList.add("ico"); el.style.cssText = `--x:${x};--y:${y};--w:${w};--h:${h}`;
-  });
-  built = true;
-}
-function fit() {                                     // "contain": seluruh adegan selalu terlihat
-  const w = innerWidth, h = innerHeight, s = Math.min(w / GW, h / GH), hw = w / s / 2, hh = h / s / 2;
-  gr.setSize(w, h, false);
-  Object.assign(gcam, { left: GW / 2 - hw, right: GW / 2 + hw, top: GH / 2 + hh, bottom: GH / 2 - hh });
-  gcam.updateProjectionMatrix();
-  if (S.bg) {
-    S.bg.userData.sx = (gcam.right - gcam.left) / GW;
-    S.bg.userData.sy = (gcam.top - gcam.bottom) / GH;
+  function resultStatus(r){return !r?"Belum dimainkan":r.status==="won"?"Berhasil · Pesanan terselamatkan":"Gagal · Layanan terhenti";}
+  function selector(){
+    setView("selector");location("Pilih Match");
+    content.innerHTML=`<div class="easy-heading"><span class="easy-eyebrow">DUA KOKI · TIGA CARA BELAJAR</span><h1 tabindex="-1">Dapur kecil, keputusan besar.</h1><p>${teamLine()}</p></div><div class="easy-match-cards">${[1,2,3].map(m=>`<article class="easy-match-card"><div class="easy-card-art">${image("assets/easy/asset-f4cce51c5aa1.png")}${Selection.team.map(id=>image(R.CHARACTERS[id].image,"easy-card-chef")).join("")}<span>MATCH ${m}</span></div><div class="easy-card-copy"><h2>${titles[m]}</h2><p>${["","Amati dua koki saling menahan alat sampai dapur macet.","Dahulukan pelanggan yang lebih mendesak dan pilih strategi dari tutorial.","Periksa kondisi alat sebelum menjawab Dikasih atau Tidak."][m]}</p><div class="easy-card-status">${resultStatus(results[m])}${results[m]?`<b>${m===1?"Deadlock tanpa penanganan":`${results[m].score}/100 · ${stars(results[m].score)}`}</b>`:""}</div><button class="btn" data-easy-play="${m}">${results[m]?"Ulangi":"Mulai"} Match ${m} →</button></div></article>`).join("")}</div><p class="easy-small easy-center">Hasil terakhir disimpan di browser ini. Kamu bisa mengulang setiap match atau mengganti tim melalui Tim Koki.</p>`;focus();
   }
-}
-
-/* ---------- helper timeline ---------- */
-const say = (t) => { cap.textContent = t; cap.classList.remove("show"); void cap.offsetWidth; cap.classList.add("show"); };
-const pop = (k, delay = 0, from = 0) => { const o = S[k]; o.visible = true; o.userData.k = from; tw(o.userData, "k", 1, .5, "back", delay); };
-const swap = (a, b) => { S[a].visible = false; pop(b, 0, .6); };
-const drop = (k) => { const o = S[k], u = o.userData; o.visible = true; u.oy = 250; u.a = 0; tw(u, "oy", 0, .8, "back"); tw(u, "a", 1, .25); };
-const lit = (k) => { const o = S[k]; o.visible = true; o.userData.a = 0; tw(o.userData, "a", .8, .6); };
-
-const TL = [
-  [.3,   () => say("Mode Easy: tonton bagaimana deadlock terjadi.")],
-  [1.2,  () => { pop("chefA0"); pop("chefB0", .15); Sfx.beep(440, "triangle", .1); say("Dua koki siap bekerja di dapur."); }],
-  [3.2,  () => { pop("custA0"); pop("custB0", .15); Sfx.confirm(); say("Pelanggan datang dan memesan makanan."); }],
-  [4.4,  () => { pop("ordL"); Sfx.beep(660, "square", .08); }],
-  [5.0,  () => { pop("ordR"); Sfx.beep(740, "square", .08); }],
-  [6.6,  () => { drop("wok"); lit("gA"); Sfx.beep(220, "square", .12); say("Koki A mengambil Wajan dan memegangnya."); }],
-  [8.6,  () => { lit("gB"); Sfx.beep(180, "square", .12); say("Koki B sudah lebih dulu memegang Kompor."); }],
-  [10.6, () => { swap("chefA0", "chefA1"); swap("chefB0", "chefB1"); pop("cldL"); pop("cldR", .35); Sfx.beep(330, "sawtooth", .2); say("Koki A butuh Kompor. Koki B butuh Wajan. Tak ada yang mau melepas."); }],
-  [13.0, () => { dotsOn = true; pop("arA"); pop("arB"); say("Keduanya saling menunggu satu sama lain..."); }],
-  [15.6, () => { pop("hg"); say("Waktu berjalan, pesanan tak kunjung jadi."); }],
-  [19.6, () => { swap("custA0", "custA1"); swap("custB0", "custB1"); S.hg.visible = false; pop("wn"); tw(U("bg"), "tint", .35, 1.2, "io"); Sfx.alarm(); say("Pelanggan mulai marah!"); }],
-  [22.5, () => { S.wn.visible = false; pop("cyc"); tw(U("bg"), "tint", 1, 1, "io"); rumble = 2.5; fxOn = true; game.classList.add("dead"); Sfx.alarm(); say("DEADLOCK! Saling menunggu tanpa akhir, tak ada yang bisa lanjut."); }],
-  [29.5, () => { ana.hidden = false; game.classList.add("done"); cap.classList.remove("show"); Sfx.confirm(); }]
-];
-
-/* ---------- animasi yang selalu jalan ---------- */
-const SPOTS = [[1190, 135], [1105, 142], [70, 160], [40, 300], [1235, 330], [640, 70], [330, 95]];
-function animate(t, dt) {
-  const A = AMP;
-  ["chefA", "chefB"].forEach((c, i) => {
-    const a = U(c + "0"), p = U(c + "1");
-    a.sy = 1 + Math.sin(t * 2.2 + i) * .01 * A; a.jx = Math.sin(t * 1.4 + i) * 1.2 * A; a.r = Math.sin(t * 1.4 + i) * .008 * A;       // napas santai
-    p.sy = 1 + Math.sin(t * 9 + i) * .014 * A; p.jx = Math.sin(t * 38 + i * 2) * 1.8 * A; p.r = Math.sin(t * 7 + i) * .028 * A;         // panik gemetar
-  });
-  ["custA", "custB"].forEach((c, i) => {
-    U(c + "0").sy = 1 + Math.sin(t * 2.4 + i) * .012 * A;
-    const g = U(c + "1"); g.jx = Math.sin(t * 31 + i) * 1.5 * A; g.sy = 1 + Math.sin(t * 6 + i) * .02 * A;                               // marah gemetar
-  });
-  ["ordL", "ordR"].forEach((k, i) => { U(k).r = Math.sin(t * 3 + i * 2) * (S.custA1.visible ? .05 : .018) * A; });
-  ["cldL", "cldR"].forEach((k, i) => { U(k).jy = Math.sin(t * 2 + i * 1.7) * 4 * A; });
-  const h = U("hg"), f = Math.min(1, (t % 2.4) / .6);                                                                                    // jam pasir terbalik tiap 2,4 dtk
-  h.r = Math.PI * (Math.floor(t / 2.4) + E.io(f)); h.sx = h.sy = 1 + Math.sin(t * 4) * .04;
-  const w = U("wn"); w.r = Math.sin(t * 10) * .06 * A; w.sx = w.sy = 1 + Math.abs(Math.sin(t * 5)) * .1;
-  const c = U("cyc"); c.r = -t * .7; c.sx = c.sy = 1 + Math.sin(t * 3) * .05;
-  U("gA").sx = U("gA").sy = 1 + Math.sin(t * 3) * .1; U("gB").sx = U("gB").sy = 1 + Math.sin(t * 3 + 1) * .1;
-  U("arA").jx = Math.sin(t * 6) * 5 * A; U("arB").jx = -Math.sin(t * 6) * 5 * A;
-
-  dots.forEach((m, i) => {                           // dua garis titik berlawanan arah, memudar sebelum sampai
-    m.visible = dotsOn; if (!dotsOn) return;
-    const a = i < 9, fr = (t * .35 + (i % 9) / 9) % 1, x0 = a ? 250 : 1000, x1 = a ? 790 : 400, y = a ? 394 : 418;
-    m.position.set(x0 + (x1 - x0) * fr, GH - y + Math.sin(t * 5 + i) * 2, 3);
-    m.scale.setScalar(Math.max(2, 20 * (1 - Math.max(0, (fr - .8) / .2))));
-    m.material.opacity = Math.min(1, fr * 6);
-  });
-
-  if (fxOn && (fxT -= dt) <= 0) {                    // ledakan acak setelah deadlock
-    fxT = rnd(.25, .6);
-    const [x, y] = SPOTS[Math.floor(rnd(0, SPOTS.length))], n = ["boom", "spark", "debris"][Math.floor(rnd(0, 3))];
-    const q = fx.find((v) => !v.on && v.n === n);
-    if (q) { Object.assign(q, { on: true, age: 0, life: rnd(.6, 1) }); Object.assign(q.m.userData, { bx: x, by: GH - y }); q.m.visible = true; if (Math.random() < .5) Sfx.beep(rnd(60, 110), "sawtooth", .2); }
+  function showDialog(title,html,{ok=true,button="Lanjutkan",after=null,kind="feedback",actions=null,icon=ok?"✓":"!"}={}){
+    lastFocus=document.activeElement;window.EasyMatch1.pause(true);
+    $("easy-dialog-title").textContent=title;$("easy-dialog-copy").innerHTML=html;
+    $("easy-dialog-icon").textContent=icon;dialog.dataset.tone=ok?"correct":"wrong";
+    $("easy-dialog-actions").innerHTML=actions||`<button class="btn" data-easy="close-dialog">${button}</button>`;
+    dialogKind=kind;afterDialog=after;dialog.hidden=false;dialog.querySelector("button,input")?.focus();
   }
-  fx.forEach((q) => {
-    if (!q.on) return;
-    q.age += dt; const p = q.age / q.life, u = q.m.userData;
-    if (p >= 1) { q.on = false; q.m.visible = false; return; }
-    u.k = .4 + .9 * E.out(Math.min(1, p * 3)); u.a = p < .55 ? 1 : 1 - (p - .55) / .45; u.oy = q.n === "debris" ? -p * 50 : 0;
-  });
-
-  const tn = U("bg").tint; bgMat.color.setRGB(1 - .38 * tn, 1 - .55 * tn, 1 - .55 * tn);                                                  // latar memerah
-  const amp = rumble * A; gcam.position.set(rnd(-1, 1) * amp, rnd(-1, 1) * amp, 10);                                                   // layar bergetar
-}
-
-/* ---------- kontrol ---------- */
-function reset() {
-  tweens.length = 0; T = 0; ei = 0; dotsOn = false; fxOn = false; fxT = 0; rumble = 0;
-  game.classList.remove("dead", "done"); ana.hidden = true; cap.classList.remove("show");
-  for (const k in S) {
-    const o = S[k]; Object.assign(o.userData, { ox: 0, oy: 0, k: 1, a: 1, sx: 1, sy: 1, r: 0, jx: 0, jy: 0 });
-    if (k !== "bg" && o.parent === gscene) o.visible = false;   // anak (bubble/awan) ikut grup induknya
+  function closeDialog(){
+    if(dialog.hidden||dialogKind==="request")return;
+    dialog.hidden=true;const after=afterDialog;afterDialog=null;lastTime=performance.now();window.EasyMatch1.pause(false);
+    if(after)after();
+    if(!dialog.hidden)return;
+    if(lastFocus?.isConnected&&!lastFocus.closest("[hidden]")&&!lastFocus.disabled)lastFocus.focus({preventScroll:true});
+    else content.querySelector("button")?.focus({preventScroll:true});
   }
-  U("bg").tint = 0; U("gA").a = 0; U("gB").a = 0; fx.forEach((q) => { q.on = false; });
-  clock.getDelta();
-  fit();
-}
-function frame() {
-  if (!running) return;
-  raf = requestAnimationFrame(frame);
-  const dt = Math.min(clock.getDelta(), .05); T += dt;
-  while (ei < TL.length && T >= TL[ei][0]) TL[ei++][1]();
-  stepTweens(dt); animate(T, dt); sync(); gr.render(gscene, gcam);
-}
-async function start() {
-  game.hidden = false; stage.dataset.mode = "game";
-  if (!built) await build();
-  reset(); running = true; frame();
-}
-function stop() {
-  running = false; cancelAnimationFrame(raf); game.hidden = true; setMode("menu");
-}
-window.startGame = start;
-
-$("game-exit").addEventListener("click", () => { Sfx.confirm(); stop(); });
-$("game-menu").addEventListener("click", () => { Sfx.confirm(); stop(); });
-$("game-replay").addEventListener("click", () => { Sfx.confirm(); reset(); });
-document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !game.hidden) stop(); });
+  async function play(number){
+    match=number;setView(match===1?"match1":"play");location(`Match ${match} · ${titles[match]}`);
+    state=R.create(match,Selection.team);
+    if(match===1){
+      const token=generation;$("easy-m1-team").hidden=false;$("easy-m1-team").textContent=teamLine(state.team);
+      const skip=$("easy-skip");skip.hidden=false;skip.disabled=true;
+      try{await window.EasyMatch1.start({team:state.team,onDone(){R.finishMatch1(state);save();renderResult();}});if(token===generation)skip.disabled=false;}
+      catch(_){if(token!==generation)return;content.hidden=false;content.innerHTML=`<div class="easy-heading"><h1 tabindex="-1">Circular Wait · A ⇄ B</h1><p>${teamLine(state.team)}</p><p>A memegang Katel dan menunggu Kompor. B memegang Kompor dan menunggu Katel. Keduanya tidak melepas alat; tanpa penanganan, dapur tetap macet.</p></div>`;skip.disabled=false;}
+    }else{renderPlay();focus();lastTime=performance.now();raf=requestAnimationFrame(frame);if(match===3)requestDialog();}
+  }
+  function notice(){
+    if(state.phase==="plan")return "Dua pelanggan datang bersamaan. P1 (Koki A) memiliki tenggat terdekat. Circular wait sudah terdeteksi; tentukan urutan dan strategi pemulihan.";
+    if(state.phase==="request")return "Ada permintaan peminjaman alat. Periksa pemilik, kondisi pemakaian, serta kemungkinan circular wait. Timer dijeda selama popup.";
+    if(state.phase==="blocked")return state.deadlocked?"Circular wait! Kedua koki masih saling menunggu. Timer pelanggan terus berkurang.":"Permintaan aman ditolak; layanan terhambat. Pelanggan terus menunggu.";
+    if(state.phase==="roundEnd")return "Ronde selesai. Periksa hasilnya, lalu lanjutkan ke kondisi alat berikutnya.";
+    if(state.phase==="complete")return "Simulasi selesai. Periksa skor, pelanggan, dan keputusanmu.";
+    if(state.cooking)return `${R.name(state,state.cooking)} sedang memasak. Setelah selesai, alat dilepas dan giliran berikutnya bisa dimulai.`;
+    return `Alat siap untuk ${R.name(state,state.queue[0])}. Mulai masak agar pelanggan terlayani sebelum kehabisan waktu.`;
+  }
+  function kitchen(){
+    const s=state;
+    return `<div class="easy-kitchen"><div class="easy-customers">${s.customers.map((c,i)=>`<article class="easy-customer ${c.status}"><div class="easy-order">${image(`assets/easy/food-${i?"b":"a"}.png`)}<b>${c.id} · ${c.dish}</b><span>${R.name(s,c.chef)}</span><progress data-patience="${c.id}" max="${c.patience}" value="${c.remaining}" aria-label="Kesabaran ${c.id}"></progress><small data-clock="${c.id}">${Math.ceil(c.remaining)} detik</small></div>${image(`assets/medium/customer-${i+1}.png`,"easy-customer-sprite")}<span class="easy-customer-status">${{waiting:"Menunggu",served:"✓ Terlayani",escaped:"Kabur! Waktu habis",unserved:"Belum terlayani"}[c.status]}</span></article>`).join("")}</div><div class="easy-kitchen-counter"></div><div class="easy-chefs">${["A","B"].map((id,i)=>{
+      const held=Object.keys(s.owners).filter(t=>s.owners[t]===id),cooking=s.cooking===id||(s.phase==="request"&&s.request?.busy&&s.request.owner===id);
+      return `<article class="easy-chef ${cooking?"cooking":""}" data-kitchen-chef="${id}"><div class="easy-held-tools">${held.map(t=>image(toolImages[t],"",R.TOOLS[t])).join("")}${!held.length?'<span>Alat bebas / menunggu giliran</span>':""}</div>${image(R.CHARACTERS[s.team[i]].image,"easy-chef-sprite",R.CHARACTERS[s.team[i]].name)}<strong>Koki ${id} · ${R.CHARACTERS[s.team[i]].name}</strong><small>${cooking?"Sedang memasak":s.waiting[id]?`Menunggu ${R.TOOLS[s.waiting[id]]}`:"Siap / menganggur"}</small></article>`;
+    }).join("")}</div></div>`;
+  }
+  function actionPanel(){
+    if(state.phase==="plan")return `<div class="easy-paper easy-plan"><h2>1. Siapa menggunakan alat dulu?</h2><div class="easy-leaders">${["A","B"].map(id=>`<button data-easy-leader="${id}" aria-pressed="${state.leader===id}">${R.name(state,id)}${id==="A"?" · P1 / 60 detik":" · P2 / 90 detik"}</button>`).join("")}</div><h2>2. Pilih strategi dari Tutorial</h2><div class="easy-methods">${R.METHODS.map((method,i)=>`<button data-easy-method="${i}" aria-pressed="${state.method===method}"><b>${escape(method)}</b><span>${["Deteksi siklus yang sudah terjadi, lalu pulihkan alokasi alat.","Atur penggunaan sejak awal agar syarat deadlock tidak terjadi.","Periksa safe state sebelum mengabulkan permintaan baru."][i]}</span></button>`).join("")}</div><button class="btn" data-easy="apply-plan" ${!state.leader||!state.method?"disabled":""}>Terapkan Urutan & Strategi →</button></div>`;
+    if(state.phase==="ready")return `<div class="easy-paper"><h2>Giliran ${R.name(state,state.queue[0])}</h2><p>Gunakan Katel + Kompor, selesaikan pesanan, lalu lepaskan keduanya.</p><button class="btn" data-easy="cook">${state.served?"Alokasikan Alat & ":""}Masak Pesanan →</button></div>`;
+    if(state.phase==="cooking")return `<div class="easy-paper easy-cooking"><h2>Memasak & Melayani</h2><p data-cooking-label>${R.name(state,state.cooking)} · ${Math.ceil(state.cookLeft)} detik</p><progress id="easy-cook-progress" max="${R.COOK_SECONDS}" value="${R.COOK_SECONDS-state.cookLeft}" aria-label="Progres memasak"></progress></div>`;
+    if(state.phase==="blocked")return `<div class="easy-paper easy-blocked"><h2>${state.deadlocked?"Dapur Macet!":"Layanan Tertunda"}</h2><p>${state.deadlocked?"Tidak ada koki yang bisa melanjutkan. Pelanggan akan kabur ketika kesabarannya habis.":"Penolakan tadi menghambat pesanan yang sebenarnya bisa selesai."}</p><button class="btn" data-easy="wait-timeout">Lihat Akibat Menunggu →</button><small>Simulasikan waktu berlalu hingga tenggat pelanggan berikutnya.</small></div>`;
+    if(state.phase==="roundEnd")return `<div class="easy-paper"><h2>Ronde ${state.round+1} selesai</h2><p>Setiap ronde memiliki dua pesanan dan alokasi alat baru.</p><button class="btn" data-easy="next-round">Lanjut Ronde ${state.round+2} →</button></div>`;
+    return "";
+  }
+  function allocation(){
+    return `<section class="easy-paper easy-allocation"><h2>Siapa Memegang Alat?</h2>${Object.entries(R.TOOLS).map(([t,label])=>`<div>${image(toolImages[t])}<span>${label}<b>${state.owners[t]?R.name(state,state.owners[t]):"Bebas"}</b></span></div>`).join("")}<p class="easy-cycle ${state.deadlocked?"danger":""}">${state.deadlocked?"A → B → A · Circular wait":"Tidak ada circular wait aktif"}</p></section>`;
+  }
+  function renderPlay(){
+    content.innerHTML=`<div class="easy-play-heading"><div><span class="easy-eyebrow">MATCH ${match} / 3${match===3?` · RONDE ${state.round+1} / ${R.TOTAL_ROUNDS}`:""}</span><h1 tabindex="-1">${titles[match]}</h1></div><div class="easy-score"><b>${R.score(state)}<small>/100</small></b><span>${state.served}/${match===2?2:8} terlayani · ${state.correct} benar / ${state.wrong} salah</span></div></div><div class="easy-notice" role="status"><span>!</span><p>${notice()}</p></div><div class="easy-play-layout"><div class="easy-workspace">${kitchen()}<div id="easy-action-panel">${actionPanel()}</div></div><aside class="easy-sidebar">${allocation()}<section class="easy-paper easy-log"><h2>Log Dapur</h2><ol>${state.log.map(l=>`<li class="${l.kind}">${escape(l.text)}</li>`).join("")}</ol></section></aside></div>`;
+    const log=content.querySelector(".easy-log ol");log.scrollTop=log.scrollHeight;
+  }
+  function clocks(){
+    for(const c of state.customers){const text=content.querySelector(`[data-clock="${c.id}"]`),bar=content.querySelector(`[data-patience="${c.id}"]`);if(text)text.textContent=c.status==="waiting"?`${Math.ceil(c.remaining)} detik`:c.status==="served"?"Selesai":c.status==="escaped"?"Waktu habis":"Ronde dihentikan";if(bar)bar.value=c.remaining;}
+    const bar=$("easy-cook-progress"),label=content.querySelector('[data-cooking-label]');if(bar)bar.value=R.COOK_SECONDS-state.cookLeft;if(label&&state.cooking)label.textContent=`${R.name(state,state.cooking)} · ${Math.ceil(state.cookLeft)} detik`;
+  }
+  function feedback(res){
+    if(!res)return;renderPlay();showDialog(res.ok?"Benar!":"Salah!",`<p>${escape(res.text)}</p><div class="easy-points">${res.delta>0?"+":""}${res.delta} poin · Skor ${res.score}/100</div>${!res.ok?"<small>Penalti 10 poin tetap dihitung pada skor akhir, termasuk ketika skor sementara masih nol.</small>":""}`,{ok:res.ok});
+  }
+  function handleEvents(events){
+    if(!events.length){clocks();return;}
+    renderPlay();
+    if(state.phase==="complete"){
+      save();showDialog(state.status==="won"?"Semua pesanan selesai!":"Pelanggan Kabur!",`<p>${state.status==="won"?"Alat digunakan bergantian dan semua pelanggan terlayani sebelum tenggat.":"Ada pelanggan kehabisan kesabaran karena layanan terhambat. Periksa keputusan dan alokasi alat pada hasil."}</p>`,{ok:state.status==="won",button:"Lihat Hasil",after:renderResult});
+    }else if(state.phase==="roundEnd"){
+      const success=state.history.at(-1).successful;
+      showDialog(success?"Ronde Selesai!":"Pelanggan Kabur!",`<p>${success?"Kedua pelanggan terlayani. Alat dikembalikan dan siap untuk ronde berikutnya.":"Tenggat habis saat layanan terhambat. Pesanan lain pada ronde ini belum terlayani; ronde berikutnya dimulai dengan alokasi baru."}</p>`,{ok:success});
+    }else if(match===2&&events.includes("served"))showDialog("Benar · Pesanan Terlayani!","<p>+35 poin layanan. Koki melepas Katel dan Kompor. Sekarang alokasikan kedua alat ke koki berikutnya.</p>");
+  }
+  function frame(time){
+    if(view!=="play"||shell.hidden)return;
+    const dt=Math.min(Math.max(0,(time-lastTime)/1000),.25);lastTime=time;
+    if(dialog.hidden&&!document.hidden)handleEvents(R.tick(state,dt));
+    if(view==="play")raf=requestAnimationFrame(frame);
+  }
+  function requestDialog(){
+    const q=state.request,p=R.grantPreview(state),owner=R.name(state,q.owner),borrower=R.name(state,q.borrower);
+    showDialog("Izin Peminjaman Alat",`<div class="easy-request-visual">${image(R.CHARACTERS[state.team[q.owner==="A"?0:1]].image)}${image(toolImages[q.tool])}${image(R.CHARACTERS[state.team[q.borrower==="A"?0:1]].image)}</div><p><b>${borrower}</b> ingin meminjam <b>${R.TOOLS[q.tool]}</b> dari <b>${owner}</b>.</p><div class="easy-request-facts"><p><b>Kondisi pemilik:</b> ${q.busy?"sedang memasak, memakai Katel dan Kompor bersamaan. Jika satu alat diambil, masakannya terhenti.":"alat yang diminta sedang menganggur dan belum dipakai memasak."}</p><p><b>Setelah dipinjamkan:</b> ${p.cycle?"peminjam akan menahan satu alat sambil meminta alat satunya; pemilik juga menunggu alat yang diambil. Siklus A ⇄ B akan terbentuk.":"peminjam akan memiliki semua alat yang dibutuhkan, dapat langsung menyelesaikan masakan dan mengembalikan alat."}</p><p><b>Pesanan aktif:</b> ${state.customers.map(c=>`${c.id} ${c.dish} / Koki ${c.chef}`).join(" · ")}</p></div><p class="easy-pause-note">Ⅱ Timer dijeda selama kamu memeriksa permintaan dan popup hasil.</p>`,{kind:"request",icon:"?",actions:'<button class="btn easy-yes" data-easy-give="yes">Dikasih</button><button class="btn easy-no" data-easy-give="no">Tidak</button><button class="easy-plain" data-easy="cancel-request">Kembali ke Pilih Match</button>'});
+  }
+  function renderResult(){
+    const r=results[match];setView("result");location(`Hasil Match ${match}`);
+    content.innerHTML=`<div class="easy-result easy-paper"><span class="easy-eyebrow">EASY MATCH ${match} · ${titles[match]}</span><h1 tabindex="-1">${match===1?"Deadlock Tanpa Penanganan":r.status==="won"?"Dapur Kembali Lancar!":"Layanan Belum Berhasil"}</h1><p>${teamLine(r.team)}</p>${match===1?' <div class="easy-result-icon">A ⇄ B</div>':`<div class="easy-stars" aria-label="${r.stars} bintang">${stars(r.score)}</div><div class="easy-final-score">${r.score}<small>/100</small></div>`}<p>${match===1?"Kedua koki menahan satu alat sambil menunggu alat lain. Tanpa penanganan, hold and wait dan circular wait terus berlangsung.":match===2?"Rencana pemulihan harus sesuai kondisi deadlock yang sudah terjadi dan tenggat pelanggan. Lepas alat setelah memasak agar koki lain mendapat giliran.":"Periksa safe state setiap kali ada permintaan. Berikan alat idle yang membuat peminjam langsung selesai; tunda pemindahan yang memecah pasangan alat koki yang sedang memasak."}</p><div class="easy-result-stats"><span><b>${r.served}</b> terlayani</span><span><b>${r.escaped}</b> kabur</span><span><b>${r.unserved}</b> belum terlayani</span><span><b>${r.correct}/${r.correct+r.wrong}</b> keputusan benar</span></div>${match===3?`<p>Akurasi keputusan: ${r.accuracy}% · 4 ronde / 8 pesanan.</p>`:""}${match!==1?'<p class="easy-small">100 = ★★★ · 50–99 = ★★☆ · 0–49 = ★☆☆</p>':""}<div class="easy-actions"><button class="btn" data-easy-play="${match}">↻ Ulangi Match</button><button class="btn" ${match===3?'data-easy="compare"':`data-easy-play="${match+1}"`}>${match===3?"Perbandingan 3 Match →":`Lanjut Match ${match+1} →`}</button><button class="easy-plain" data-easy="selector">Pilih Match</button><button class="easy-plain" data-easy="compare">Lihat Perbandingan</button></div></div>`;focus();
+  }
+  function compare(){
+    setView("compare");location("Perbandingan Easy");
+    const cells=fn=>[1,2,3].map(m=>`<td>${results[m]?fn(results[m],m):"Belum dimainkan"}</td>`).join("");
+    content.innerHTML=`<div class="easy-heading"><span class="easy-eyebrow">HASIL PERCOBAAN TERAKHIR</span><h1 tabindex="-1">Perbandingan Penanganan Deadlock</h1><p>Easy Match 1 vs Match 2 vs Match 3</p></div><div class="easy-table-wrap"><table class="easy-table"><caption>Hasil nyata tiga match Easy</caption><thead><tr><th>Perbandingan</th>${[1,2,3].map(m=>`<th>Match ${m}<br>${titles[m]}</th>`).join("")}</tr></thead><tbody><tr><th>Status</th>${cells(resultStatus)}</tr><tr><th>Tim Koki</th>${cells(r=>teamLine(r.team))}</tr><tr><th>Pelanggan</th>${cells(r=>`${r.served} terlayani · ${r.escaped} kabur · ${r.unserved} belum terlayani`)}</tr><tr><th>Skor & Bintang</th>${cells((r,m)=>m===1?"— · Pengamatan deadlock":`<b>${r.score}/100</b><span class="easy-table-stars">${stars(r.score)}</span>`)}</tr><tr><th>Keputusan Benar / Salah</th>${cells((r,m)=>m===1?"—":`${r.correct} / ${r.wrong}${m===3?` · Akurasi ${r.accuracy}%`:""}`)}</tr><tr><th>Cara Kerja</th><td>Tanpa penanganan. A menahan Katel, B menahan Kompor; circular wait tidak diputus.</td><td>Deteksi & Pemulihan atas siklus yang sudah terjadi. Prioritaskan tenggat P1, pinjamkan Kompor ke A pada titik aman, lalu gunakan alat bergantian.</td><td>Validasi izin Dikasih / Tidak berdasarkan alokasi dan kondisi pemakaian. Cegah siklus baru, biarkan masakan aktif selesai sebelum alat dipinjamkan.</td></tr><tr><th>Pelajaran</th><td>Menunggu saja tidak memulihkan deadlock.</td><td>Pencegahan mengatur syarat sejak awal; Penghindaran memeriksa alokasi sebelum permintaan diberikan. Keduanya berbeda dari memulihkan siklus yang sudah terjadi.</td><td>Alat sibuk tidak selalu berarti deadlock. Pada ronde berisiko ini, memecah dua alat yang sama-sama diperlukan membentuk circular wait; menunda sampai pemilik selesai tetap memungkinkan layanan.</td></tr><tr><th>Main kembali</th>${[1,2,3].map(m=>`<td><button class="easy-plain" data-easy-play="${m}">Main Match ${m} →</button></td>`).join("")}</tr></tbody></table></div><details class="easy-paper easy-comparison-log"><summary>Log Keputusan Match 3 (${results[3]?.log.length||0})</summary>${results[3]?`<ol>${results[3].log.map(l=>`<li class="${l.kind}">${escape(l.text)}</li>`).join("")}</ol>`:"<p>Selesaikan Match 3 untuk melihat log.</p>"}</details><div class="easy-actions"><button class="btn" data-easy="selector">← Pilih Match</button><button class="easy-plain" data-easy="exit">Kembali ke Menu Utama</button></div>`;focus();
+  }
+  function audio(){const on=Sfx.volume>0;$("easy-audio").textContent=on?"SFX ON":"SFX OFF";$("easy-audio").setAttribute("aria-pressed",String(on));}
+  function settings(){
+    showDialog("Pengaturan Suara",`<p>Timer match dijeda selama pengaturan dibuka.</p><label class="easy-volume">Musik <input id="easy-music-volume" type="range" min="0" max="100" value="${Math.round(Music.volume*100)}"></label><label class="easy-volume">SFX <input id="easy-sfx-volume" type="range" min="0" max="100" value="${Math.round(Sfx.volume*100)}"></label>`,{icon:"♫",button:"Kembali ke Game"});
+    $("easy-music-volume").addEventListener("input",e=>{Music.set(Number(e.target.value)/100);Music.start();saveAudio();});
+    $("easy-sfx-volume").addEventListener("input",e=>{Sfx.setVolume(Number(e.target.value)/100);syncChip();audio();saveAudio();});
+  }
+  function exit(){cleanup();shell.hidden=true;setMode("menu");$("menu-main").querySelector("button").focus();}
+  function click(e){
+    const b=e.target.closest("button");if(!b||b.disabled)return;
+    const action=b.dataset.easy;
+    if(!dialog.hidden){
+      if(action==="close-dialog")closeDialog();
+      else if(action==="cancel-request")selector();
+      else if(b.dataset.easyGive&&dialogKind==="request"){
+        dialog.hidden=true;dialogKind="feedback";feedback(R.decide(state,b.dataset.easyGive==="yes"));
+      }
+      return;
+    }
+    if(b.dataset.easyCharacter){Selection.toggle(b.dataset.easyCharacter);Sfx.confirm();return;}
+    if(b.dataset.easyItem){Selection.setItem(b.dataset.easyItem);Sfx.confirm();return;}
+    if(b.hasAttribute("data-team-confirm")){if(Selection.confirm()&&action==="ready")selector();Sfx.confirm();return;}
+    if(action==="audio"){$("sfx").click();audio();return;}
+    Sfx.confirm();
+    if(action==="setup")return setup();if(action==="selector")return selector();if(action==="compare")return compare();if(action==="exit")return exit();if(action==="settings")return settings();
+    if(b.dataset.easyPlay)return play(Number(b.dataset.easyPlay));
+    if(action==="skip") {window.EasyMatch1.advance(29.5);if(view==="match1"){R.finishMatch1(state);save();renderResult();}return;}
+    if(view!=="play")return;
+    if(b.dataset.easyLeader){const id=b.dataset.easyLeader;R.selectLeader(state,id);renderPlay();content.querySelector(`[data-easy-leader="${id}"]`).focus({preventScroll:true});return;}
+    if(b.dataset.easyMethod!==undefined){const index=b.dataset.easyMethod;R.selectMethod(state,R.METHODS[Number(index)]);renderPlay();content.querySelector(`[data-easy-method="${index}"]`).focus({preventScroll:true});return;}
+    if(action==="apply-plan")return feedback(R.plan(state));
+    if(action==="cook"){R.startCook(state);renderPlay();return;}
+    if(action==="wait-timeout")return handleEvents(R.tick(state,Math.max(...state.customers.map(c=>c.remaining))+1));
+    if(action==="next-round"&&R.nextRound(state)){renderPlay();requestDialog();}
+  }
+  shell.addEventListener("click",click);dialog.addEventListener("click",click);
+  new ResizeObserver(([entry])=>{if(entry.target.offsetHeight)shell.style.setProperty("--easy-header",`${entry.target.offsetHeight}px`);}).observe(shell.querySelector(".easy-toolbar"));
+  document.addEventListener("keydown",e=>{
+    if(shell.hidden)return;
+    if(!dialog.hidden){
+      if(e.key==="Escape"){e.preventDefault();dialogKind==="request"?selector():closeDialog();}
+      if(e.key==="Tab"){
+        const all=[...dialog.querySelectorAll("button,input")],first=all[0],last=all.at(-1);
+        if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+        else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+      }
+    }else if(e.key==="Escape"){e.preventDefault();view==="setup"||view==="selector"?exit():selector();}
+  });
+  document.addEventListener("visibilitychange",()=>{lastTime=performance.now();window.EasyMatch1.pause(document.hidden||!dialog.hidden);});
+  window.startGame=()=>{shell.hidden=false;stage.dataset.mode="game";audio();setup();};
 })();

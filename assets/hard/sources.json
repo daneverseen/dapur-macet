@@ -1,0 +1,37 @@
+[
+  {
+    "entry": "Hard 1.png",
+    "path": "assets/hard/Hard 1.png",
+    "sha256": "d920adf49cf06a742a3f67fba766860debc01203d15dec81b02d483bd32ea4fe",
+    "width": 1281,
+    "height": 720
+  },
+  {
+    "entry": "Hard 4.png",
+    "path": "assets/hard/Hard 4.png",
+    "sha256": "f037d834735c6f2beffaacc9b3bf2f588e4834ee40ec647ab364da2e69f341a0",
+    "width": 1280,
+    "height": 720
+  },
+  {
+    "entry": "Hard 18.png",
+    "path": "assets/hard/Hard 18.png",
+    "sha256": "76451fe73a0b493d2855db190ee674b7bfdf02dee596c60e2d725423966859da",
+    "width": 1280,
+    "height": 720
+  },
+  {
+    "entry": "Hard 19.png",
+    "path": "assets/hard/Hard 19.png",
+    "sha256": "a9967c15e2e228e105d1606be11daf0f5ce03b2b0bb1aa80c6d6efc19a4c2cc9",
+    "width": 1280,
+    "height": 720
+  },
+  {
+    "entry": "Medium 32.png",
+    "path": "assets/hard/Medium 32.png",
+    "sha256": "083f74b62096ec26b3305f31b3d861ae0c4745fa5c81816fe8a5cdb8e100b065",
+    "width": 1274,
+    "height": 708
+  }
+]

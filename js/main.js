@@ -110,7 +110,6 @@ document.querySelectorAll("button[data-action]").forEach((b) => b.addEventListen
   else if (a === "tutorial") openTutorial();
   else openModal(SCREENS[a].title, SCREENS[a].html);
 }));
-<<<<<<< HEAD
 $("tutorial-back").addEventListener("click", () => {
  Sfx.confirm();
  if (tutorialSlide > 1) {
@@ -127,6 +126,8 @@ $("tutorial-start-game").addEventListener("click", () => {
 });
 tutorial.querySelectorAll(".tutorial-option").forEach((option) => option.addEventListener("click", () => {
  const group = option.dataset.choiceGroup;
+ if (group === "character") { window.EasySelection.toggle(option.dataset.label); Sfx.confirm(); return; }
+ window.EasySelection.setItem(option.dataset.label);
  tutorial.querySelectorAll(`.tutorial-option[data-choice-group="${group}"]`).forEach((choice) => {
    choice.setAttribute("aria-pressed", choice === option);
  });
@@ -135,6 +136,7 @@ tutorial.querySelectorAll(".tutorial-option").forEach((option) => option.addEven
 }));
 tutorial.querySelectorAll("[data-tutorial-confirm]").forEach((button) => button.addEventListener("click", () => {
  const group = button.dataset.tutorialConfirm;
+ if (group === "character") { window.EasySelection.confirm(); Sfx.confirm(); return; }
  const selected = tutorial.querySelector(`.tutorial-option[data-choice-group="${group}"][aria-pressed="true"]`);
  if (!selected) {
    $(`tutorial-${group}-status`).textContent = "Pilih salah satu dulu!";
@@ -143,9 +145,6 @@ tutorial.querySelectorAll("[data-tutorial-confirm]").forEach((button) => button.
  $(`tutorial-${group}-status`).textContent = `${selected.dataset.label} siap digunakan!`;
  Sfx.confirm();
 }));
-=======
-
->>>>>>> 11b61f98c9b5f318cf7e3ccda84a57eecf80693a
 document.querySelectorAll("button[data-level]").forEach((b) => b.addEventListener("click", () => {
   const l = b.dataset.level;
   Sfx.confirm();

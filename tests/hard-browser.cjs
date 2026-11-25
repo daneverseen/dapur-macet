@@ -1,0 +1,91 @@
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
+const openBrowser=require('./browser-driver.cjs');
+(async()=>{
+  let b;
+  try{
+    b=await openBrowser({port:8125,profile:'.test-browser-hard'});
+    const {command,evaluate,wait,click,screenshot,delay}=b;
+    const ready=()=>wait('typeof startGame3 === "function" && document.getElementById("stage").classList.contains("ready") && !document.getElementById("loader")');
+    const feedback=(timeout=17000)=>wait('!document.getElementById("hard-dialog").hidden',timeout);
+    const title=()=>evaluate('document.getElementById("hard-dialog-title").textContent');
+    const close=()=>click('[data-hard="close-dialog"]');
+    const read=m=>evaluate(`JSON.parse(localStorage.getItem('dapurMacet.hard.results.v1'))[${m}]`);
+    const loan=async answer=>{await feedback();assert.equal(await title(),'Konfirmasi Peminjaman');await click(`[data-hard-give="${answer}"]`);await wait('["Benar!","Salah!"].includes(document.getElementById("hard-dialog-title").textContent)');await close();assert.equal(await evaluate('document.getElementById("hard-dialog").hidden'),true);};
+    const dispatch=async id=>{await click(`[data-hard-dispatch="${id}"]`);assert.equal(await title(),'Benar!');await close();await feedback();await close();};
+    const selectVictim=id=>evaluate(`document.getElementById('hard-victim').value=${JSON.stringify(id)}`);
+    await command('Emulation.setDeviceMetricsOverride',{width:1366,height:900,deviceScaleFactor:1,mobile:false});
+    await command('Page.navigate',{url:'http://127.0.0.1:8125/'});await ready();
+    await evaluate('localStorage.clear()');await command('Page.reload');await ready();
+    await click('[data-action="play"]');await click('[data-level="Hard"]');
+    await wait('getComputedStyle(document.getElementById("game3")).opacity === "1"');
+    await screenshot('hard-01-selector');await click('[data-hard-play="1"]');await wait('!document.getElementById("hard-skip").disabled');
+    await evaluate('HardMatch1.advance(14.4)');await delay(2200);await screenshot('hard-02-match1');await click('[data-hard="skip"]');
+    const m1=await read(1);assert.deepEqual([m1.status,m1.served,m1.unserved],['lost',0,4]);
+    await click('[data-hard-play="2"]');await screenshot('hard-03-match2-plan');
+    assert.equal(await evaluate('document.querySelectorAll(".hard-station").length'),4);
+    assert.ok(await evaluate('document.querySelector(".hard-matrix-panel").textContent.includes("Total [1, 1, 1]")'));
+    await click('[data-hard="settings"]');const frozen=await evaluate('Array.from(document.querySelectorAll("[data-hard-clock]")).map(e=>e.textContent)');await delay(1100);
+    assert.deepEqual(await evaluate('Array.from(document.querySelectorAll("[data-hard-clock]")).map(e=>e.textContent)'),frozen);
+    await evaluate('document.getElementById("hard-sfx-volume").value=0;document.getElementById("hard-sfx-volume").dispatchEvent(new Event("input",{bubbles:true}))');
+    await close();assert.equal(await evaluate('document.getElementById("hard-audio").textContent'),'SFX OFF');await click('[data-hard="audio"]');
+    await click('[data-hard-method="0"]');await click('[data-hard="recover"]');assert.equal(await title(),'Benar!');await close();
+    for(const id of ['D','B','A','C'])await dispatch(id);
+    const m2=await read(2);assert.deepEqual([m2.status,m2.score,m2.stars,m2.served],['won',100,3,4]);assert.deepEqual(m2.sequence,['D','B','A','C']);
+    await screenshot('hard-04-match2-result');await click('[data-hard-play="3"]');await screenshot('hard-05-safe-loan');
+    const frozen3=await evaluate('Array.from(document.querySelectorAll("[data-hard-clock]")).map(e=>e.textContent)');await delay(1100);
+    assert.deepEqual(await evaluate('Array.from(document.querySelectorAll("[data-hard-clock]")).map(e=>e.textContent)'),frozen3);
+    await loan('yes');await delay(7600);
+    assert.equal(await evaluate('Array.from(document.querySelectorAll(".hard-queue .queued")).length'),4);
+    await screenshot('hard-06-dense-queue');await feedback();await screenshot('hard-07-unsafe-loan');await loan('no');
+    await feedback();await loan('yes');await feedback();await close();
+    const m3=await read(3);assert.deepEqual([m3.status,m3.score,m3.stars,m3.served,m3.accuracy],['won',100,3,12,100]);
+    await screenshot('hard-08-match3-result');await click('[data-hard="compare"]');await screenshot('hard-09-comparison');
+    assert.ok(await evaluate('document.querySelector(".hard-comparison").textContent.includes("12/12 terlayani")'));
+    // Unsafe grant followed by rescheduling; deadline never reset.
+    await click('[data-hard-play="3"]');await loan('yes');await feedback();
+    await click('[data-hard-give="yes"]');assert.equal(await title(),'Salah!');await close();
+    assert.ok(await evaluate('document.querySelector(".hard-safe-sequence").classList.contains("unsafe")'));
+    const before=await evaluate('document.querySelector("[data-hard-clock=H5]").textContent');
+    await selectVictim('A');await click('[data-hard-repair="reschedule"]');assert.equal(await title(),'Benar!');
+    assert.ok(await evaluate('document.getElementById("hard-dialog-copy").textContent.includes("tanpa reset timer")'));
+    const after=await evaluate('document.querySelector("[data-hard-clock=H5]").textContent');assert.ok(parseInt(after)<=parseInt(before));
+    await screenshot('hard-10-reschedule-recovery');await close();await feedback();await loan('yes');await feedback();await close();
+    const recovered=await read(3);assert.equal(recovered.status,'won');assert.equal(recovered.served,12);assert.equal(recovered.score,75);assert.equal(recovered.rescheduled,1);
+    // Cancellation of non-holder D rejected; cancel A restores safety at a cost.
+    await click('[data-hard-play="3"]');await loan('yes');await feedback();await click('[data-hard-give="yes"]');await close();
+    await selectVictim('D');await click('[data-hard-repair="cancel"]');assert.equal(await title(),'Salah!');await close();
+    assert.equal(await evaluate('document.querySelectorAll(".hard-station.cancelled").length'),0);
+    await selectVictim('A');await click('[data-hard-repair="cancel"]');assert.equal(await title(),'Benar!');
+    assert.equal(await evaluate('document.querySelectorAll(".hard-station.cancelled").length'),1);await screenshot('hard-11-cancellation');
+    await close();await feedback();await loan('yes');await feedback();await close();
+    const cancelled=await read(3);assert.equal(cancelled.status,'partial');assert.equal(cancelled.served,11);assert.equal(cancelled.cancelled,1);assert.equal(cancelled.score,60);
+    // Directing only A/B/C is insufficient: D's customer eventually escapes.
+    await click('[data-hard="compare"]');await click('[data-hard-play="2"]');await click('[data-hard-method="0"]');await click('[data-hard="recover"]');await close();
+    for(const id of ['A','B','C'])await dispatch(id);
+    await click('[data-hard="wait-timeout"]');assert.equal(await title(),'Salah · Pelanggan Kabur!');
+    assert.equal(await evaluate('document.querySelector("[data-hard-chef=D]").classList.contains("escaped")'),true);
+    await screenshot('hard-12-starvation');await close();const starved=await read(2);assert.equal(starved.served,3);assert.equal(starved.escaped,1);assert.equal(starved.status,'lost');
+    // Tablet, portrait, persistence, and keyboard dismissal.
+    await command('Emulation.setDeviceMetricsOverride',{width:1024,height:768,deviceScaleFactor:1,mobile:false});
+    await click('[data-hard="selector"]');await screenshot('hard-13-tablet-selector');await click('[data-hard-play="3"]');await screenshot('hard-14-tablet-loan');
+    await loan('yes');await screenshot('hard-15-tablet-game');
+    assert.equal(await evaluate('document.getElementById("hard-content").scrollWidth > document.getElementById("hard-content").clientWidth'),false);
+    assert.ok(await evaluate('document.getElementById("hard-content").getBoundingClientRect().top >= document.querySelector(".hard-toolbar").getBoundingClientRect().bottom'));
+    await click('[data-hard="compare"]');await screenshot('hard-16-tablet-comparison');
+    await command('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
+    await click('[data-hard="selector"]');await click('[data-hard-play="3"]');await screenshot('hard-17-mobile-loan');
+    await loan('yes');await screenshot('hard-18-mobile-game');
+    assert.equal(await evaluate('document.getElementById("hard-content").scrollWidth > document.getElementById("hard-content").clientWidth'),false);
+    await click('[data-hard="compare"]');await command('Page.reload');await ready();
+    assert.equal((await read(3)).cancelled,1);assert.equal((await read(2)).status,'lost');
+    await click('[data-action="play"]');await click('[data-level="Hard"]');await click('[data-hard="compare"]');
+    assert.ok(await evaluate('document.querySelector(".hard-comparison").textContent.includes("11/12 terlayani")'));
+    await click('[data-hard="home"]');assert.equal(await evaluate('document.getElementById("stage").dataset.mode'),'menu');
+    await b.checkClean();
+    fs.writeFileSync(path.join(b.output,'hard-browser-report.json'),JSON.stringify({status:'passed',errors:b.errors,failed:b.failed,requests:b.responses.length,match1:m1,match2:m2,match3:m3,recovered,cancelled,starved},null,2));
+    console.log('Hard browser passed: 1→2→3→perbandingan, 4 koki/3 alat, 12 pelanggan, safe/unsafe loans, reschedule, cancel, starvation, audio, persistence, tablet/portrait.');
+  }catch(error){console.error(error);if(b){try{await b.screenshot('hard-failure');}catch(_){}console.error(JSON.stringify({errors:b.errors,failed:b.failed},null,2));}process.exitCode=1;}
+  finally{if(b)await b.close();}
+})();

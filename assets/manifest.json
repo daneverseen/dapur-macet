@@ -1,0 +1,594 @@
+{
+  "Alat Dapur (2).png": {
+    "width": 58,
+    "height": 59
+  },
+  "Alat Dapur 2.png": {
+    "width": 58,
+    "height": 59
+  },
+  "Alat Dapur.png": {
+    "width": 99,
+    "height": 85
+  },
+  "bg oren.png": {
+    "width": 377,
+    "height": 73
+  },
+  "bg-main-menu.webp": {
+    "width": 1376,
+    "height": 768
+  },
+  "bg-pengaturan.png": {
+    "width": 1289,
+    "height": 720
+  },
+  "bg-pilih-karakter.jpg": {
+    "width": 1376,
+    "height": 768
+  },
+  "Bg3.png": {
+    "width": 1280,
+    "height": 720
+  },
+  "button-tidak.png": {
+    "width": 573,
+    "height": 244
+  },
+  "button-ya.png": {
+    "width": 574,
+    "height": 244
+  },
+  "ceu-pipit.png": {
+    "width": 1243,
+    "height": 1266
+  },
+  "chef-panic.png": {
+    "width": 584,
+    "height": 800
+  },
+  "chef.png": {
+    "width": 508,
+    "height": 758
+  },
+  "Deadlock Cycle Loops.png": {
+    "width": 330,
+    "height": 339
+  },
+  "donat.png": {
+    "width": 103,
+    "height": 79
+  },
+  "easy/asset-0eb884fc0efc.png": {
+    "width": 66,
+    "height": 51
+  },
+  "easy/asset-0f4050a438b3.png": {
+    "width": 66,
+    "height": 51
+  },
+  "easy/asset-195f2a3bcbf1.png": {
+    "width": 231,
+    "height": 250
+  },
+  "easy/asset-1c27b42ec805.png": {
+    "width": 231,
+    "height": 272
+  },
+  "easy/asset-30b5852933dd.png": {
+    "width": 324,
+    "height": 242
+  },
+  "easy/asset-5f3fce76fea0.png": {
+    "width": 162,
+    "height": 150
+  },
+  "easy/asset-c2f13a8f913e.png": {
+    "width": 231,
+    "height": 285
+  },
+  "easy/asset-e0b0a76de28f.png": {
+    "width": 231,
+    "height": 250
+  },
+  "easy/asset-f4cce51c5aa1.png": {
+    "width": 1280,
+    "height": 720
+  },
+  "easy/chef-koki.png": {
+    "width": 208,
+    "height": 256
+  },
+  "easy/chef-pipit.png": {
+    "width": 245,
+    "height": 256
+  },
+  "easy/chef-puput.png": {
+    "width": 228,
+    "height": 256
+  },
+  "easy/chef-ucil.png": {
+    "width": 238,
+    "height": 256
+  },
+  "easy/food-a.png": {
+    "width": 149,
+    "height": 85
+  },
+  "easy/food-b.png": {
+    "width": 135,
+    "height": 77
+  },
+  "Easy 6 1.png": {
+    "width": 365,
+    "height": 205
+  },
+  "Efek Terpisah.png": {
+    "width": 200,
+    "height": 87
+  },
+  "game-atlas.png": {
+    "width": 1024,
+    "height": 1024
+  },
+  "game-bg.webp": {
+    "width": 1280,
+    "height": 720
+  },
+  "Gemini_Generated_Image_2elcgy2elcgy2elc 1 (1).png": {
+    "width": 201,
+    "height": 201
+  },
+  "Gemini_Generated_Image_2elcgy2elcgy2elc 1.png": {
+    "width": 201,
+    "height": 201
+  },
+  "Gemini_Generated_Image_i22aqji22aqji22a 1.png": {
+    "width": 1280,
+    "height": 720
+  },
+  "Gemini_Generated_Image_yx3uunyx3uunyx3u 1 (1).png": {
+    "width": 164,
+    "height": 164
+  },
+  "Gemini_Generated_Image_yx3uunyx3uunyx3u 1.png": {
+    "width": 164,
+    "height": 164
+  },
+  "hard/Hard 1.png": {
+    "width": 1281,
+    "height": 720
+  },
+  "hard/Hard 18.png": {
+    "width": 1280,
+    "height": 720
+  },
+  "hard/Hard 19.png": {
+    "width": 1280,
+    "height": 720
+  },
+  "hard/Hard 4.png": {
+    "width": 1280,
+    "height": 720
+  },
+  "hard/Medium 32.png": {
+    "width": 1274,
+    "height": 708
+  },
+  "Hard 1.png": {
+    "width": 1281,
+    "height": 720
+  },
+  "Hard 18.png": {
+    "width": 1280,
+    "height": 720
+  },
+  "Hard 19.png": {
+    "width": 1280,
+    "height": 720
+  },
+  "Hard 4.png": {
+    "width": 1280,
+    "height": 720
+  },
+  "Hard.png": {
+    "width": 2752,
+    "height": 1536
+  },
+  "Ikon Koki dan Alat Masak.png": {
+    "width": 41,
+    "height": 29
+  },
+  "image 1.png": {
+    "width": 74,
+    "height": 83
+  },
+  "kepala-koki-cry.png": {
+    "width": 4800,
+    "height": 3584
+  },
+  "kepala-koki-panic.png": {
+    "width": 3600,
+    "height": 2688
+  },
+  "kepala-koki-thumb.png": {
+    "width": 4800,
+    "height": 3584
+  },
+  "kepala-koki.png": {
+    "width": 4096,
+    "height": 3058
+  },
+  "Koki (1).png": {
+    "width": 205,
+    "height": 244
+  },
+  "Koki (3).png": {
+    "width": 148,
+    "height": 187
+  },
+  "Koki (4).png": {
+    "width": 148,
+    "height": 187
+  },
+  "Koki (5).png": {
+    "width": 91,
+    "height": 95
+  },
+  "Koki (6).png": {
+    "width": 89,
+    "height": 109
+  },
+  "Koki (7).png": {
+    "width": 268,
+    "height": 278
+  },
+  "Koki Tampak Belakang (1).png": {
+    "width": 141,
+    "height": 174
+  },
+  "Koki Tampak Belakang (2).png": {
+    "width": 131,
+    "height": 142
+  },
+  "Koki Tampak Belakang (3).png": {
+    "width": 181,
+    "height": 154
+  },
+  "Koki Tampak Belakang (4).png": {
+    "width": 148,
+    "height": 174
+  },
+  "Koki Tampak Belakang (5).png": {
+    "width": 133,
+    "height": 144
+  },
+  "Koki Tampak Belakang (6).png": {
+    "width": 148,
+    "height": 174
+  },
+  "Koki Tampak Belakang (7).png": {
+    "width": 133,
+    "height": 144
+  },
+  "Koki Tampak Belakang.png": {
+    "width": 182,
+    "height": 168
+  },
+  "kompor.png": {
+    "width": 144,
+    "height": 104
+  },
+  "kue sepotong.png": {
+    "width": 104,
+    "height": 95
+  },
+  "Lencana Status 1.png": {
+    "width": 142,
+    "height": 141
+  },
+  "Lencana Status 2.png": {
+    "width": 31,
+    "height": 34
+  },
+  "Lencana Status 3.png": {
+    "width": 31,
+    "height": 34
+  },
+  "Logo Bintang & Medali.png": {
+    "width": 80,
+    "height": 91
+  },
+  "Logo Stop.png": {
+    "width": 71,
+    "height": 71
+  },
+  "logo.png": {
+    "width": 564,
+    "height": 539
+  },
+  "Makanan Enak 10.png": {
+    "width": 40,
+    "height": 41
+  },
+  "Makanan Enak 7.png": {
+    "width": 39,
+    "height": 37
+  },
+  "Makanan Enak 8.png": {
+    "width": 39,
+    "height": 37
+  },
+  "Makanan Enak 9.png": {
+    "width": 40,
+    "height": 41
+  },
+  "mang-ucil.png": {
+    "width": 1241,
+    "height": 1268
+  },
+  "match2/Medium 11.png": {
+    "width": 1280,
+    "height": 720
+  },
+  "match2/Medium 14.png": {
+    "width": 1280,
+    "height": 720
+  },
+  "match2/Medium 15.png": {
+    "width": 1280,
+    "height": 720
+  },
+  "match2/Medium 16.png": {
+    "width": 1280,
+    "height": 720
+  },
+  "match2/Medium 18.png": {
+    "width": 1267,
+    "height": 696
+  },
+  "match2/Medium 19.png": {
+    "width": 1280,
+    "height": 720
+  },
+  "match2/Medium 20.png": {
+    "width": 1280,
+    "height": 720
+  },
+  "match2/Medium 26.png": {
+    "width": 1295,
+    "height": 719
+  },
+  "match2/Medium 27.png": {
+    "width": 1295,
+    "height": 719
+  },
+  "match3/Alat Dapur-1.png": {
+    "width": 144,
+    "height": 104
+  },
+  "match3/Alat Dapur-2.png": {
+    "width": 144,
+    "height": 104
+  },
+  "match3/Alat Dapur-3.png": {
+    "width": 144,
+    "height": 104
+  },
+  "match3/Alat Dapur-4.png": {
+    "width": 144,
+    "height": 104
+  },
+  "match3/Alat Dapur-5.png": {
+    "width": 144,
+    "height": 104
+  },
+  "match3/Alat Dapur-6.png": {
+    "width": 144,
+    "height": 104
+  },
+  "match3/Alat Dapur.png": {
+    "width": 150,
+    "height": 151
+  },
+  "match3/Ikon Log Keputusan.png": {
+    "width": 119,
+    "height": 122
+  },
+  "match3/image 8.png": {
+    "width": 169,
+    "height": 175
+  },
+  "match3/image 9.png": {
+    "width": 169,
+    "height": 175
+  },
+  "match3/Koki Tampak Depan.png": {
+    "width": 166,
+    "height": 131
+  },
+  "match3/Makanan Enak 34.png": {
+    "width": 322,
+    "height": 241
+  },
+  "match3/Makanan Enak 35.png": {
+    "width": 296,
+    "height": 221
+  },
+  "match3/Makanan Enak 36.png": {
+    "width": 266,
+    "height": 198
+  },
+  "match3/Medium 12.png": {
+    "width": 1280,
+    "height": 720
+  },
+  "match3/Medium 22.png": {
+    "width": 1267,
+    "height": 696
+  },
+  "match3/Medium 23.png": {
+    "width": 1280,
+    "height": 720
+  },
+  "match3/Medium 24.png": {
+    "width": 1280,
+    "height": 720
+  },
+  "match3/Medium 25.png": {
+    "width": 1280,
+    "height": 720
+  },
+  "match3/Medium 28.png": {
+    "width": 1280,
+    "height": 720
+  },
+  "match3/Medium 29.png": {
+    "width": 1280,
+    "height": 720
+  },
+  "match3/Medium 30.png": {
+    "width": 1295,
+    "height": 719
+  },
+  "match3/Medium 31.png": {
+    "width": 1295,
+    "height": 719
+  },
+  "MBG.png": {
+    "width": 112,
+    "height": 95
+  },
+  "Medali.png": {
+    "width": 83,
+    "height": 98
+  },
+  "medium/chef-hijab.png": {
+    "width": 91,
+    "height": 169
+  },
+  "medium/chef-man-back.png": {
+    "width": 141,
+    "height": 174
+  },
+  "medium/chef-woman.png": {
+    "width": 97,
+    "height": 177
+  },
+  "medium/customer-1.png": {
+    "width": 79,
+    "height": 89
+  },
+  "medium/customer-2.png": {
+    "width": 64,
+    "height": 83
+  },
+  "medium/customer-3.png": {
+    "width": 79,
+    "height": 89
+  },
+  "medium/food-2-1.png": {
+    "width": 112,
+    "height": 102
+  },
+  "medium/food-2-2.png": {
+    "width": 92,
+    "height": 70
+  },
+  "medium/food-2-3.png": {
+    "width": 103,
+    "height": 93
+  },
+  "medium/food-3-1.png": {
+    "width": 80,
+    "height": 75
+  },
+  "medium/food-3-2.png": {
+    "width": 51,
+    "height": 67
+  },
+  "medium/food-3-3.png": {
+    "width": 54,
+    "height": 80
+  },
+  "medium-atlas.png": {
+    "width": 1400,
+    "height": 705
+  },
+  "medium-bg.webp": {
+    "width": 1280,
+    "height": 720
+  },
+  "medium-preview.png": {
+    "width": 640,
+    "height": 360
+  },
+  "neng-puput.png": {
+    "width": 1213,
+    "height": 1296
+  },
+  "pak-asep.png": {
+    "width": 1208,
+    "height": 1302
+  },
+  "panci.png": {
+    "width": 150,
+    "height": 151
+  },
+  "Pelanggan (1).png": {
+    "width": 64,
+    "height": 83
+  },
+  "Pelanggan.png": {
+    "width": 79,
+    "height": 89
+  },
+  "ramen.png": {
+    "width": 101,
+    "height": 79
+  },
+  "Rectangle 32.png": {
+    "width": 54,
+    "height": 91
+  },
+  "Rectangle 33.png": {
+    "width": 54,
+    "height": 65
+  },
+  "Rectangle 34.png": {
+    "width": 52,
+    "height": 51
+  },
+  "supplied/Hard.png": {
+    "width": 2752,
+    "height": 1536
+  },
+  "supplied/Koki.png": {
+    "width": 2752,
+    "height": 1532
+  },
+  "supplied/Makanan Enak 1.png": {
+    "width": 2752,
+    "height": 2050
+  },
+  "supplied/Makanan Enak 2.png": {
+    "width": 3321,
+    "height": 1813
+  },
+  "sushi.png": {
+    "width": 87,
+    "height": 72
+  },
+  "tombol next.png": {
+    "width": 147,
+    "height": 53
+  },
+  "wajan.png": {
+    "width": 144,
+    "height": 104
+  },
+  "warning.png": {
+    "width": 162,
+    "height": 147
+  }
+}

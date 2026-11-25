@@ -7,10 +7,12 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Dapur Macet! – Menu Utama</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<link rel="icon" href="assets/logo.png" type="image/png">
+<link rel="stylesheet" href="assets/vendor/fonts.css">
 <link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/medium.css">
+<link rel="stylesheet" href="css/easy.css">
+<link rel="stylesheet" href="css/hard.css">
 </head>
 <body>
 <main class="stage" id="stage" data-mode="menu">
@@ -64,7 +66,7 @@
     <div class="tutorial-slide-two" id="tutorial-slide-2" aria-label="Pilih karakter dan barang awal" hidden>
       <section class="tutorial-choice-panel" aria-labelledby="tutorial-character-title">
         <h2 class="tutorial-step-title" id="tutorial-character-title">Pemilihan Karakter</h2>
-        <p class="tutorial-step-copy">Pilih karakter koki yang akan kamu gunakan di dalam permainan!</p>
+        <p class="tutorial-step-copy">Pilih maksimal 2 karakter: pilihan pertama Koki A, kedua Koki B. Klik ulang untuk membatalkan.</p>
         <div class="tutorial-options tutorial-character-options" role="group" aria-label="Karakter koki">
           <button class="tutorial-option" type="button" data-choice-group="character" data-label="Koki" aria-pressed="true">
             <img src="assets/Koki (1).png" alt=""><span>Koki</span>
@@ -88,7 +90,7 @@
         <p class="tutorial-step-copy">Pilih barang awal yang akan kamu gunakan di permainan!</p>
         <div class="tutorial-options tutorial-item-options" role="group" aria-label="Barang awal">
           <button class="tutorial-option" type="button" data-choice-group="item" data-label="Wajan" aria-pressed="true">
-            <img src="assets/Alat Dapur.png" alt=""><span>Wajan</span>
+            <img src="assets/wajan.png" alt=""><span>Wajan</span>
           </button>
           <button class="tutorial-option" type="button" data-choice-group="item" data-label="Panci" aria-pressed="false">
             <img src="assets/panci.png" alt=""><span>Panci</span>
@@ -324,9 +326,13 @@
     <section class="game" id="game" aria-label="Simulasi deadlock" hidden>
     <canvas id="game-canvas"></canvas>
     <div class="game-alarm"></div>
-    <img class="game-logo" src="assets/logo.png" alt="">
-    <button class="game-exit" id="game-exit" type="button">✕ Keluar</button>
-    <div class="game-hint">↻ Putar HP ke mode landscape agar lebih besar</div>
+    <header class="easy-toolbar">
+      <button class="easy-brand" data-easy="selector"><img src="assets/logo.png" alt="Dapur Macet!"><span>EASY<small id="easy-location">Persiapan Dapur</small></span></button>
+      <nav aria-label="Navigasi Easy"><button data-easy="setup">Tim Koki</button><button data-easy="selector">Pilih Match</button><button data-easy="compare">Perbandingan</button><button id="easy-audio" data-easy="audio" aria-pressed="true">SFX ON</button><button data-easy="settings">⚙ Suara</button><button id="game-exit" data-easy="exit">✕ Keluar</button></nav>
+    </header>
+    <div id="easy-content" class="easy-content"></div>
+    <div id="easy-m1-team" class="easy-m1-team" hidden></div>
+    <button id="easy-skip" class="btn" data-easy="skip" hidden>Lewati animasi → Hasil</button>
     <div class="game-cap" id="game-cap" role="status"></div>
 
     <div class="ana" id="ana" hidden>
@@ -349,16 +355,26 @@
     </div>
   </section>
 
+  <div id="easy-dialog" class="easy-dialog" hidden role="dialog" aria-modal="true" aria-labelledby="easy-dialog-title" aria-describedby="easy-dialog-copy">
+    <div class="easy-dialog-card"><span id="easy-dialog-icon" aria-hidden="true"></span><h2 id="easy-dialog-title"></h2><div id="easy-dialog-copy"></div><div id="easy-dialog-actions"></div></div>
+  </div>
+
     <section class="game" id="game2" aria-label="Simulasi deadlock Medium" hidden>
     <canvas id="game2-canvas"></canvas>
     <div class="game-alarm"></div>
-    <img class="game-logo" src="assets/logo.png" alt="">
-    <button class="game-exit" id="game2-exit" type="button">✕ Keluar</button>
-    <div class="game-hint">↻ Putar HP ke mode landscape agar lebih besar</div>
+    <header class="medium-toolbar">
+      <button class="medium-brand" data-medium="selector" aria-label="Pilih match Medium"><img src="assets/logo.png" alt="Dapur Macet!"><span>MEDIUM <small id="medium-location">Pilih match</small></span></button>
+      <nav aria-label="Navigasi Medium"><button data-medium="selector">Pilih Match</button><button data-medium="compare">Perbandingan</button><button data-medium="audio" id="medium-audio" aria-pressed="true">SFX ON</button><button data-medium="settings" aria-label="Pengaturan suara">⚙ Suara</button><button id="game2-exit" data-medium="exit">✕ Keluar</button></nav>
+    </header>
+    <div id="medium-content" class="medium-content"></div>
+    <div id="medium-m1-controls" class="medium-m1-controls" hidden>
+      <button class="btn" data-medium="observe">Lewati intro</button>
+      <div id="medium-m1-choices" hidden><p>Tanpa penanganan: apa yang akan kamu lakukan?</p><button class="btn" data-medium="m1-wait">Tunggu giliran</button><button class="btn" data-medium="m1-request">Minta Kompor</button></div>
+    </div>
     <div class="game-cap" id="game2-cap" role="status"></div>
 
     <div class="ana ana2" id="ana2" hidden>
-      <h2>Analisis Deadlock</h2>
+      <h2>Match 1 · DEADLOCK</h2>
       <div class="ana-row">
         <span class="tile"><span data-ico="frontA"></span></span>
         <span class="tile"><span data-ico="wok"></span></span>
@@ -374,53 +390,36 @@
         <span class="tile"><span data-ico="pot"></span></span>
         <span class="pill"><span data-ico="pot"></span><span class="nudge" data-ico="arrowT"></span><span data-ico="wok"></span></span>
       </div>
-      <p>Koki A memegang Wajan dan menunggu Kompor milik B. B memegang Kompor dan menunggu Panci milik C. C memegang Panci dan menunggu Wajan milik A. Rantai tunggu melingkar ini disebut circular wait: itulah deadlock.</p>
+      <p>Koki A menahan Wajan sambil menunggu Kompor milik B. B menahan Kompor dan menunggu Panci milik C. C menahan Panci dan menunggu Wajan milik A. Ini adalah hold and wait dalam circular wait A → B → C → A. Tanpa penanganan, semua tindakan tetap berakhir deadlock.</p>
       <div class="ana-btns">
         <button class="btn" id="game2-replay" type="button">Ulangi</button>
-        <button class="btn" id="game2-menu" type="button">Menu</button>
+        <button class="btn" data-medium="next2" type="button">Lanjut Match 2 →</button>
+        <button class="btn" id="game2-menu" type="button">Pilih Match</button>
+        <button class="btn" data-medium="compare" type="button">Perbandingan</button>
       </div>
     </div>
   </section>
 
+  <div id="medium-dialog" class="medium-dialog" hidden role="dialog" aria-modal="true" aria-labelledby="medium-dialog-title" aria-describedby="medium-dialog-copy">
+    <div class="medium-dialog-card" tabindex="-1"><div id="medium-dialog-icon" aria-hidden="true"></div><h2 id="medium-dialog-title"></h2><div id="medium-dialog-copy"></div><div id="medium-dialog-actions"></div></div>
+  </div>
+
   <!-- Tambahkan tepat setelah </section> milik #game2 -->
-<section id="game3" class="game" hidden>
-  <canvas id="game3-canvas"></canvas>
-  <div id="game3-cap" class="cap" aria-live="polite"></div>
-  <button id="game3-exit" class="game-exit" type="button">✕ Keluar</button>
-
-  <!-- Pop-up Pemilihan saat Koki Menunggu -->
-  <div id="hard-popup" class="hard-popup" hidden role="dialog" aria-modal="true" aria-labelledby="hard-popup-q">
-    <div class="hard-popup-box">
-      <div class="hard-popup-badge">⚠️ ANTREAN ALAT DAPUR</div>
-      <div class="hard-popup-preview">
-        <img id="hard-popup-img" src="assets/Alat Dapur.png" alt="Alat Dapur">
-      </div>
-      <h3 id="hard-popup-q">Apakah kamu akan memberikan barang ini ke koki lain?</h3>
-      <p id="hard-popup-desc">Koki sedang menunggu alat yang masih dipegang koki lain. Menahan alat terlalu lama dapat memicu kemacetan total!</p>
-      <div class="hard-popup-actions">
-        <button id="btn-berikan" class="btn btn-give" type="button">Berikan</button>
-        <button id="btn-tunda" class="btn btn-delay" type="button">Tunda</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Layar Analisis Akhir Mode Hard -->
-  <div id="ana3" class="ana" hidden>
-    <div class="ana-card">
-      <h2 id="ana3-title">Analisis Deadlock (Mode Hard)</h2>
-      <p id="ana3-desc">Empat koki saling menahan empat alat dapur (Kompor, Panci, Wajan, Talenan) dalam siklus tertutup.</p>
-      <ul id="ana3-list" class="ana-list">
-        <li><b>4 Proses &amp; 4 Resource:</b> Koki A (Kompor), Koki B (Panci), Koki C (Wajan), Koki D (Talenan &amp; Pisau).</li>
-        <li><b>Preemption (Berikan):</b> Melepas alat sementara memutus syarat <i>Hold &amp; Wait</i> sehingga siklus terurai.</li>
-        <li><b>Circular Wait (Tunda):</b> Semua koki menahan alat sambil menunggu alat berikutnya hingga dapur macet total.</li>
-      </ul>
-      <div class="ana-actions">
-        <button id="game3-replay" class="btn" type="button">↻ Ulangi</button>
-        <button id="game3-menu" class="btn" type="button">☰ Pilih Level</button>
-      </div>
-    </div>
-  </div>
+<section id="game3" class="game" aria-label="Hard: empat koki, tiga alat" hidden>
+  <canvas id="game3-canvas" aria-label="Animasi deadlock empat koki"></canvas>
+  <header class="hard-toolbar">
+    <button class="hard-brand" data-hard="selector"><img src="assets/logo.png" alt="Dapur Macet!"><span>HARD<small id="hard-location">Pilih Match</small></span></button>
+    <nav aria-label="Navigasi Hard"><button data-hard="selector">Pilih Match</button><button data-hard="compare">Perbandingan</button><button id="hard-audio" data-hard="audio" aria-pressed="true">SFX ON</button><button data-hard="settings">⚙ Suara</button><button id="game3-exit" data-hard="exit">✕ Keluar</button></nav>
+  </header>
+  <div id="hard-content" class="hard-content"></div>
+  <div id="hard-m1-info" class="hard-m1-info" hidden>4 koki · 3 unit alat · A → B → C → A; D ikut tertahan.</div>
+  <button id="hard-skip" class="btn" data-hard="skip" hidden>Lewati animasi → Hasil</button>
+  <div id="game3-cap" class="cap" role="status"></div>
+  <div id="ana3" hidden></div>
 </section>
+<div id="hard-dialog" class="hard-dialog" hidden role="dialog" aria-modal="true" aria-labelledby="hard-dialog-title" aria-describedby="hard-dialog-copy">
+  <div class="hard-dialog-card"><span id="hard-dialog-icon" aria-hidden="true"></span><h2 id="hard-dialog-title"></h2><div id="hard-dialog-copy"></div><div id="hard-dialog-actions"></div></div>
+</div>
 
   <div class="wash" id="wash"></div>
   <div class="loader" id="loader" role="status" aria-label="Memuat game">
@@ -436,11 +435,18 @@
   </div>
 </main>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="assets/vendor/three.min.js"></script>
 <script src="js/main.js"></script>
 <script src="js/settings.js"></script>
+<script src="js/easy-state.js"></script>
+<script src="js/easy-selection.js"></script>
+<script src="js/easy-match1.js"></script>
 <script src="js/game.js"></script>
+<script src="js/medium-state.js"></script>
+<script src="js/medium-match1.js"></script>
 <script src="js/medium.js"></script>
+<script src="js/hard-state.js"></script>
+<script src="js/hard-match1.js"></script>
 <script src="js/hard.js"></script>
 </body>
 </html>
