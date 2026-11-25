@@ -43,13 +43,6 @@ const LEVELS = {
   Hard: "Dapur penuh sesak dan waktu mepet. Satu salah urut, semuanya macet!"
 };
 const SCREENS = {
-  tutorial: { title: "Cara Bermain", html: `
-    <ul>
-      <li><b>Ambil bahan:</b> klik dispenser mie &amp; kuah kaldu.</li>
-      <li><b>Masak:</b> rebus hingga indikator hijau menyala.</li>
-      <li><b>Topping:</b> beri telur mata sapi dan irisan daun bawang.</li>
-      <li><b>Sajikan:</b> antar ke meja sebelum pengunjung marah!</li>
-    </ul>` },
   settings: { title: "Pengaturan Game", html: `
     <div class="row"><span>Resolusi</span><b>Auto (layar penuh)</b></div>
     <div class="row"><span>Bahasa</span><b>Indonesia</b></div>
@@ -65,6 +58,42 @@ const openModal = (title, html) => {
 };
 const closeModal = () => { Sfx.beep(280, "triangle", .05); modal.classList.remove("open"); };
 
+const tutorial = $("tutorial");
+let tutorialSlide = 1;
+const setTutorialSlide = (slide) => {
+  tutorialSlide = slide;
+  [1, 2, 3, 4, 5, 6, 7, 8, 9].forEach((number) => { $(`tutorial-slide-${number}`).hidden = number !== slide; });
+  $("tutorial-status").textContent = "";
+  tutorial.dataset.slide = slide;
+  const back = $("tutorial-back");
+  back.textContent = slide === 1 ? "MENU" : "‹‹ KEMBALI";
+  back.setAttribute("aria-label", slide === 1 ? "Kembali ke menu" : "Kembali ke slide pertama");
+};
+const openTutorial = () => {
+  tutorial.hidden = false;
+  setTutorialSlide(1);
+  stage.dataset.mode = "tutorial";
+  setPanic(false);
+  $("tutorial-back").focus({ preventScroll: true });
+};
+const closeTutorial = () => {
+  tutorial.hidden = true;
+  $("tutorial-status").textContent = "";
+  stage.dataset.mode = "menu";
+};
+const nextTutorial = () => {
+  Sfx.confirm();
+  if (tutorialSlide < 9) {
+    const nextSlide = tutorialSlide + 1;
+    setTutorialSlide(nextSlide);
+    const focusTarget = nextSlide === 2 ? tutorial.querySelector(".tutorial-option")
+      : nextSlide === 9 ? $("tutorial-start-game") : $("tutorial-next");
+    focusTarget.focus({ preventScroll: true });
+    return;
+  }
+  $("tutorial-status").textContent = "Slide berikutnya segera hadir!";
+};
+
 let setPanic = () => {};                           // diisi oleh scene Three.js
 const setMode = (m) => {
   stage.dataset.mode = m;
@@ -78,7 +107,40 @@ document.querySelectorAll("button[data-action]").forEach((b) => b.addEventListen
   if (a === "play") { Sfx.alarm(); setMode("level"); return; }
   Sfx.confirm();
   if (a === "back") setMode("menu");
+  else if (a === "tutorial") openTutorial();
   else openModal(SCREENS[a].title, SCREENS[a].html);
+}));
+$("tutorial-back").addEventListener("click", () => {
+ Sfx.confirm();
+ if (tutorialSlide > 1) {
+   setTutorialSlide(tutorialSlide - 1);
+   $("tutorial-next").focus({ preventScroll: true });
+ } else closeTutorial();
+});
+$("tutorial-next").addEventListener("click", nextTutorial);
+$("tutorial-start-game").addEventListener("click", () => {
+  Sfx.alarm();
+  closeTutorial();
+  setMode("level");
+  $("menu-level").querySelector("[data-level]").focus({ preventScroll: true });
+});
+tutorial.querySelectorAll(".tutorial-option").forEach((option) => option.addEventListener("click", () => {
+ const group = option.dataset.choiceGroup;
+ tutorial.querySelectorAll(`.tutorial-option[data-choice-group="${group}"]`).forEach((choice) => {
+   choice.setAttribute("aria-pressed", choice === option);
+ });
+ $(`tutorial-${group}-status`).textContent = "";
+ Sfx.confirm();
+}));
+tutorial.querySelectorAll("[data-tutorial-confirm]").forEach((button) => button.addEventListener("click", () => {
+ const group = button.dataset.tutorialConfirm;
+ const selected = tutorial.querySelector(`.tutorial-option[data-choice-group="${group}"][aria-pressed="true"]`);
+ if (!selected) {
+   $(`tutorial-${group}-status`).textContent = "Pilih salah satu dulu!";
+   return;
+ }
+ $(`tutorial-${group}-status`).textContent = `${selected.dataset.label} siap digunakan!`;
+ Sfx.confirm();
 }));
 document.querySelectorAll("button[data-level]").forEach((b) => b.addEventListener("click", () => {
   const l = b.dataset.level;
@@ -92,7 +154,9 @@ $("modal-close").addEventListener("click", closeModal);
 modal.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
 document.addEventListener("keydown", (e) => {
   if (e.key !== "Escape") return;
-  if (modal.classList.contains("open")) closeModal(); else if (stage.dataset.mode === "level") setMode("menu");
+  if (modal.classList.contains("open")) closeModal();
+  else if (!tutorial.hidden) closeTutorial();
+  else if (stage.dataset.mode === "level") setMode("menu");
 });
 
 $("sfx").addEventListener("click", (e) => {
@@ -132,7 +196,7 @@ const sceneReady = new Promise((r) => { sceneReadyResolve = r; });
 /* ============================================================
    4. Scene Three.js: latar, 2 sprite koki (mesh di-warp), partikel
    ============================================================ */
-const ASSETS = { bg: "assets/bg.webp", chef: "assets/chef.png", panic: "assets/chef-panic.png" };
+const ASSETS = { bg: "assets/bg-main-menu.webp", chef: "assets/chef.png", panic: "assets/chef-panic.png" };
 const BG_W = 1376, BG_H = 768;
 // aspect = lebar/tinggi sprite; bowl & head = titik 0..1 dari pojok kiri-atas sprite
 const CHEF_A = { aspect: .6702, bowl: [.2657, .5963], head: [.5, .4] };
@@ -285,7 +349,7 @@ Promise.all([load(ASSETS.bg), load(ASSETS.chef), load(ASSETS.panic)]).then(([bgT
   const clock = new THREE.Clock();
   (function frame() {
     requestAnimationFrame(frame);
-       if (stage.dataset.mode === "settings" || stage.dataset.mode === "game") { clock.getDelta(); return; }   // hemat baterai  // hemat baterai
+       if (stage.dataset.mode === "settings" || stage.dataset.mode === "game" || stage.dataset.mode === "tutorial") { clock.getDelta(); return; }   // hemat baterai  // hemat baterai
     const dt = Math.min(clock.getDelta(), .05), t = clock.elapsedTime;
     p += (target - p) * Math.min(1, dt * 4);
     if (hop > 0) { hop += dt * 1.6; if (hop >= 1) hop = 0; }

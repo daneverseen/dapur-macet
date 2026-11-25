@@ -43,6 +43,251 @@
     <div class="bubble" id="bubble" role="status"></div>
   </div>
 
+  <section class="tutorial" id="tutorial" aria-label="Tutorial Dapur Macet" hidden>
+    <button class="tutorial-back" id="tutorial-back" type="button" aria-label="Kembali ke menu">MENU</button>
+    <button class="tutorial-next" id="tutorial-next" type="button" aria-label="Lanjutkan tutorial">
+      <img src="assets/tombol next.png" alt="Next">
+    </button>
+    <div class="tutorial-slide-one" id="tutorial-slide-1">
+      <div class="tutorial-heading">Selamat Datang di Dapur Macet</div>
+      <img class="tutorial-character" src="assets/Koki (1).png" alt="Koki menyambut pemain">
+      <div class="tutorial-card">
+        <h2>Halo Koki!!</h2>
+        <p>Selamat datang di Dapur Macet!! Sebelum mulai bermain, yuk kenali karakter, peralatan, dan cara mengatasi masalah di dapur.</p>
+        <div class="tutorial-invite">
+          <img src="assets/Logo Bintang &amp; Medali.png" alt="">
+          <span>Ikuti tutorial ini agar kamu siap menjadi Kepala Dapur!</span>
+          <img src="assets/Logo Bintang &amp; Medali.png" alt="">
+        </div>
+      </div>
+    </div>
+    <div class="tutorial-slide-two" id="tutorial-slide-2" aria-label="Pilih karakter dan barang awal" hidden>
+      <section class="tutorial-choice-panel" aria-labelledby="tutorial-character-title">
+        <h2 class="tutorial-step-title" id="tutorial-character-title">Pemilihan Karakter</h2>
+        <p class="tutorial-step-copy">Pilih karakter koki yang akan kamu gunakan di dalam permainan!</p>
+        <div class="tutorial-options tutorial-character-options" role="group" aria-label="Karakter koki">
+          <button class="tutorial-option" type="button" data-choice-group="character" data-label="Koki" aria-pressed="true">
+            <img src="assets/Koki (1).png" alt=""><span>Koki</span>
+          </button>
+          <button class="tutorial-option" type="button" data-choice-group="character" data-label="Neng Puput" aria-pressed="false">
+            <img src="assets/neng-puput.png" alt=""><span>Neng Puput</span>
+          </button>
+          <button class="tutorial-option" type="button" data-choice-group="character" data-label="Ceu Pipit" aria-pressed="false">
+            <img src="assets/ceu-pipit.png" alt=""><span>Ceu Pipit</span>
+          </button>
+          <button class="tutorial-option" type="button" data-choice-group="character" data-label="Mang Ucil" aria-pressed="false">
+            <img src="assets/mang-ucil.png" alt=""><span>Mang Ucil</span>
+          </button>
+        </div>
+        <button class="tutorial-confirm" type="button" data-tutorial-confirm="character">Konfirmasi</button>
+        <p class="tutorial-choice-status" id="tutorial-character-status" role="status" aria-live="polite"></p>
+      </section>
+
+      <section class="tutorial-choice-panel" aria-labelledby="tutorial-item-title">
+        <h2 class="tutorial-step-title" id="tutorial-item-title">Pemilihan Barang</h2>
+        <p class="tutorial-step-copy">Pilih barang awal yang akan kamu gunakan di permainan!</p>
+        <div class="tutorial-options tutorial-item-options" role="group" aria-label="Barang awal">
+          <button class="tutorial-option" type="button" data-choice-group="item" data-label="Wajan" aria-pressed="true">
+            <img src="assets/Alat Dapur.png" alt=""><span>Wajan</span>
+          </button>
+          <button class="tutorial-option" type="button" data-choice-group="item" data-label="Panci" aria-pressed="false">
+            <img src="assets/panci.png" alt=""><span>Panci</span>
+          </button>
+          <button class="tutorial-option" type="button" data-choice-group="item" data-label="Kompor" aria-pressed="false">
+            <img src="assets/kompor.png" alt=""><span>Kompor</span>
+          </button>
+        </div>
+        <button class="tutorial-confirm" type="button" data-tutorial-confirm="item">Konfirmasi</button>
+        <p class="tutorial-choice-status" id="tutorial-item-status" role="status" aria-live="polite"></p>
+      </section>
+    </div>
+    <div class="tutorial-slide-three" id="tutorial-slide-3" aria-label="Notifikasi pop-up" hidden>
+      <h2 class="tutorial-step-title">Notifikasi Pop-Up</h2>
+      <p class="tutorial-pop-subtitle">Saat pop-up seperti ini muncul, pilih salah satu opsi sesuai keinginanmu.</p>
+      <div class="tutorial-popup-card">
+        <p>Apakah kamu akan memberikan barang ini ke koki lain?</p>
+        <div class="tutorial-response-options" role="group" aria-label="Pilihan notifikasi">
+          <button class="tutorial-response give" type="button" disabled>Berikan</button>
+          <button class="tutorial-response defer" type="button" disabled>Tunda</button>
+        </div>
+      </div>
+      <div class="tutorial-popup-note">
+        <img src="assets/Logo Bintang &amp; Medali.png" alt="">
+        <p>Klik “Berikan” jika ingin memberikan barang tersebut. Klik “Tunda” jika ingin menundanya terlebih dahulu.</p>
+      </div>
+    </div>
+    <div class="tutorial-slide-four" id="tutorial-slide-4" aria-label="Pemilihan mode" hidden>
+      <h2 class="tutorial-step-title">Pilih Mode</h2>
+      <p class="tutorial-mode-subtitle">Pilih tingkat kesulitan yang kamu inginkan!!</p>
+      <div class="tutorial-mode-content">
+        <div class="tutorial-mode-cards" aria-label="Contoh tingkat kesulitan">
+          <article class="tutorial-mode-card easy" aria-label="Easy: dapur lebih sederhana">
+            <h3>Easy</h3>
+            <div class="tutorial-mode-icons" aria-hidden="true">
+              <div class="tutorial-mode-row">
+                <img src="assets/Koki (1).png" alt="">
+                <img src="assets/neng-puput.png" alt="">
+              </div>
+              <div class="tutorial-mode-row">
+                <img src="assets/Alat Dapur.png" alt="">
+                <img src="assets/panci.png" alt="">
+              </div>
+            </div>
+          </article>
+          <article class="tutorial-mode-card medium" aria-label="Medium: tantangan lebih banyak">
+            <h3>Medium</h3>
+            <div class="tutorial-mode-icons" aria-hidden="true">
+              <div class="tutorial-mode-row">
+                <img src="assets/Koki (1).png" alt="">
+                <img src="assets/neng-puput.png" alt="">
+                <img src="assets/ceu-pipit.png" alt="">
+              </div>
+              <div class="tutorial-mode-row">
+                <img src="assets/Alat Dapur.png" alt="">
+                <img src="assets/panci.png" alt="">
+                <img src="assets/kompor.png" alt="">
+              </div>
+            </div>
+          </article>
+          <article class="tutorial-mode-card hard" aria-label="Hard: dapur paling kompleks">
+            <h3>Hard</h3>
+            <div class="tutorial-mode-icons" aria-hidden="true">
+              <div class="tutorial-mode-row">
+                <img src="assets/Koki (1).png" alt="">
+                <img src="assets/neng-puput.png" alt="">
+                <img src="assets/ceu-pipit.png" alt="">
+                <img src="assets/mang-ucil.png" alt="">
+              </div>
+              <div class="tutorial-mode-row">
+                <img src="assets/Alat Dapur.png" alt="">
+                <img src="assets/panci.png" alt="">
+                <img src="assets/kompor.png" alt="">
+                <img src="assets/ramen.png" alt="">
+              </div>
+            </div>
+          </article>
+        </div>
+        <div class="tutorial-mode-note">
+          <img src="assets/Medali.png" alt="">
+          <p>Semakin tinggi tingkat kesulitan,<br>semakin kompleks dapurnya!!</p>
+        </div>
+      </div>
+    </div>
+    <div class="tutorial-slide-five" id="tutorial-slide-5" aria-label="Waspada deadlock" hidden>
+      <h2 class="tutorial-step-title">Waspada Deadlock !!</h2>
+      <div class="tutorial-deadlock-scene">
+        <div class="tutorial-deadlock-character left">
+          <div class="tutorial-speech-bubble">Aku butuh<br>spatula!!</div>
+          <img src="assets/chef-panic.png" alt="Koki kebingungan">
+        </div>
+        <img class="tutorial-deadlock-warning" src="assets/warning.png" alt="Peringatan deadlock">
+        <div class="tutorial-deadlock-character right">
+          <div class="tutorial-speech-bubble">Aku butuh<br>tepung!!</div>
+          <img src="assets/mang-ucil.png" alt="Koki membutuhkan tepung">
+        </div>
+      </div>
+      <p class="tutorial-deadlock-copy">Deadlock akan terjadi ketika dua atau lebih koki saling<br>menunggu sumber daya yang dipegang oleh koki lain.</p>
+    </div>
+    <div class="tutorial-slide-six" id="tutorial-slide-6" aria-label="Amati dan atasi" hidden>
+      <h2 class="tutorial-step-title">Amati dan Atasi</h2>
+      <div class="tutorial-observe-content">
+        <img class="tutorial-observe-scene" src="assets/Easy 6 1.png" alt="Contoh situasi dapur untuk diamati">
+        <div class="tutorial-observe-copy">
+          <p>Amati masalahnya, lalu tentukan penanganannya!!</p>
+          <div class="tutorial-observe-note">
+            <img src="assets/Medali.png" alt="">
+            <p>Setiap masalah memiliki mekanisme yang berbeda, maka perhatikan situasinya dengan baik!!</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="tutorial-slide-seven" id="tutorial-slide-7" aria-label="Strategi penanganan" hidden>
+      <h2 class="tutorial-step-title">Strategi Penanganan</h2>
+      <div class="tutorial-strategy-cards" aria-label="Tiga strategi menangani deadlock">
+        <article class="tutorial-strategy-card">
+          <h3>Deteksi &amp; Pemulihan</h3>
+          <div class="tutorial-strategy-visual" aria-hidden="true">
+            <img src="assets/Koki (5).png" alt="">
+            <img class="tutorial-strategy-arrow" src="assets/Ikon Koki dan Alat Masak.png" alt="">
+            <span class="tutorial-strategy-status-item">
+              <img src="assets/Deadlock Cycle Loops.png" alt="">
+              <img class="tutorial-strategy-status" src="assets/Lencana Status 2.png" alt="">
+            </span>
+            <span class="tutorial-strategy-status-item">
+              <img src="assets/Alat Dapur.png" alt="">
+              <img class="tutorial-strategy-status" src="assets/Lencana Status 3.png" alt="">
+            </span>
+          </div>
+          <p>Sistem akan mendeteksi<br class="tutorial-strategy-break">adanya deadlock<br class="tutorial-strategy-break">lalu melakukan pemulihan.</p>
+        </article>
+        <article class="tutorial-strategy-card">
+          <h3>Pencegahan</h3>
+          <div class="tutorial-strategy-visual" aria-hidden="true">
+            <img src="assets/Koki (1).png" alt="">
+            <img src="assets/Logo Stop.png" alt="">
+            <img src="assets/Alat Dapur (2).png" alt="">
+          </div>
+          <p>Mengatur penggunaan<br class="tutorial-strategy-break">agar kondisi deadlock<br class="tutorial-strategy-break">tidak terjadi.</p>
+        </article>
+        <article class="tutorial-strategy-card">
+          <h3>Penghindaran</h3>
+          <div class="tutorial-strategy-visual" aria-hidden="true">
+            <img src="assets/image 1.png" alt="">
+            <img src="assets/Koki (6).png" alt="">
+          </div>
+          <p>Memeriksa apakah pemberian<br class="tutorial-strategy-break">alat akan membuat dapur tetap<br class="tutorial-strategy-break">dalam kondisi aman (safe state)<br class="tutorial-strategy-break">menggunakan Banker's Algorithm.</p>
+        </article>
+      </div>
+    </div>
+    <div class="tutorial-slide-eight" id="tutorial-slide-8" aria-label="Bandingkan hasil" hidden>
+      <h2 class="tutorial-step-title">Bandingkan Hasil</h2>
+      <p class="tutorial-results-subtitle">Diakhir akan ditampilkan tabel dan grafis hasil perbandingan dari ketiga match!!</p>
+      <div class="tutorial-results-content">
+        <div class="tutorial-results-table-wrap">
+          <table class="tutorial-results-table">
+            <thead>
+              <tr><th scope="col">Match</th><th scope="col">Waktu Tunggu<br>(Rata-rata)</th><th scope="col">Status</th></tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row">Match 1</th><td>45 detik</td><td><img class="tutorial-results-status" src="assets/Lencana Status 1.png" alt="Perlu diperhatikan"></td></tr>
+              <tr><th scope="row">Match 2</th><td>30 detik</td><td><img class="tutorial-results-status" src="assets/Lencana Status 3.png" alt="Aman"></td></tr>
+              <tr><th scope="row">Match 3</th><td>25 detik</td><td><img class="tutorial-results-status" src="assets/Lencana Status 3.png" alt="Aman"></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="tutorial-results-chart" role="img" aria-label="Grafik rata-rata waktu tunggu: Match 1, 45 detik; Match 2, 30 detik; Match 3, 25 detik.">
+          <div class="tutorial-results-y-labels" aria-hidden="true"><span>60</span><span>40</span><span>20</span><span>0</span></div>
+          <div class="tutorial-results-plot" aria-hidden="true">
+            <span class="tutorial-results-gridline tutorial-results-gridline-one"></span>
+            <span class="tutorial-results-gridline tutorial-results-gridline-two"></span>
+            <div class="tutorial-results-bars">
+              <div class="tutorial-results-bar tutorial-results-bar-one"><span>45</span><img src="assets/Rectangle 32.png" alt=""></div>
+              <div class="tutorial-results-bar tutorial-results-bar-two"><span>30</span><img src="assets/Rectangle 33.png" alt=""></div>
+              <div class="tutorial-results-bar tutorial-results-bar-three"><span>25</span><img src="assets/Rectangle 34.png" alt=""></div>
+            </div>
+          </div>
+          <div class="tutorial-results-x-labels" aria-hidden="true"><span>Match 1</span><span>Match 2</span><span>Match 3</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="tutorial-slide-nine" id="tutorial-slide-9" aria-label="Siap memasak" hidden>
+      <h2 class="tutorial-step-title">SIAP MEMASAK !!</h2>
+      <div class="tutorial-ready-content">
+        <img class="tutorial-ready-chef" src="assets/Koki (7).png" alt="Koki sedang memasak">
+        <div class="tutorial-ready-message">
+          <p class="tutorial-ready-copy">
+            <span>Sekarang kamu sudah</span>
+            <span>siap memainkan</span>
+            <strong>Dapur Macet !!</strong>
+          </p>
+          <img class="tutorial-ready-sparkles" src="assets/Efek Terpisah.png" alt="">
+        </div>
+      </div>
+      <button class="tutorial-ready-play" id="tutorial-start-game" type="button">MULAI BERMAIN</button>
+    </div>
+    <p class="tutorial-status" id="tutorial-status" role="status" aria-live="polite"></p>
+  </section>
+
     <section class="settings" id="settings" aria-label="Pengaturan" hidden>
     <div class="set-scene" aria-hidden="true">
       <div class="set-dim"></div>
