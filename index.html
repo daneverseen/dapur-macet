@@ -382,6 +382,46 @@
     </div>
   </section>
 
+  <!-- Tambahkan tepat setelah </section> milik #game2 -->
+<section id="game3" class="game" hidden>
+  <canvas id="game3-canvas"></canvas>
+  <div id="game3-cap" class="cap" aria-live="polite"></div>
+  <button id="game3-exit" class="game-exit" type="button">✕ Keluar</button>
+
+  <!-- Pop-up Pemilihan saat Koki Menunggu -->
+  <div id="hard-popup" class="hard-popup" hidden role="dialog" aria-modal="true" aria-labelledby="hard-popup-q">
+    <div class="hard-popup-box">
+      <div class="hard-popup-badge">⚠️ ANTREAN ALAT DAPUR</div>
+      <div class="hard-popup-preview">
+        <img id="hard-popup-img" src="assets/Alat Dapur.png" alt="Alat Dapur">
+      </div>
+      <h3 id="hard-popup-q">Apakah kamu akan memberikan barang ini ke koki lain?</h3>
+      <p id="hard-popup-desc">Koki sedang menunggu alat yang masih dipegang koki lain. Menahan alat terlalu lama dapat memicu kemacetan total!</p>
+      <div class="hard-popup-actions">
+        <button id="btn-berikan" class="btn btn-give" type="button">Berikan</button>
+        <button id="btn-tunda" class="btn btn-delay" type="button">Tunda</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Layar Analisis Akhir Mode Hard -->
+  <div id="ana3" class="ana" hidden>
+    <div class="ana-card">
+      <h2 id="ana3-title">Analisis Deadlock (Mode Hard)</h2>
+      <p id="ana3-desc">Empat koki saling menahan empat alat dapur (Kompor, Panci, Wajan, Talenan) dalam siklus tertutup.</p>
+      <ul id="ana3-list" class="ana-list">
+        <li><b>4 Proses &amp; 4 Resource:</b> Koki A (Kompor), Koki B (Panci), Koki C (Wajan), Koki D (Talenan &amp; Pisau).</li>
+        <li><b>Preemption (Berikan):</b> Melepas alat sementara memutus syarat <i>Hold &amp; Wait</i> sehingga siklus terurai.</li>
+        <li><b>Circular Wait (Tunda):</b> Semua koki menahan alat sambil menunggu alat berikutnya hingga dapur macet total.</li>
+      </ul>
+      <div class="ana-actions">
+        <button id="game3-replay" class="btn" type="button">↻ Ulangi</button>
+        <button id="game3-menu" class="btn" type="button">☰ Pilih Level</button>
+      </div>
+    </div>
+  </div>
+</section>
+
   <div class="wash" id="wash"></div>
   <div class="loader" id="loader" role="status" aria-label="Memuat game">
     <img class="loader-logo" id="loader-logo" alt="">
@@ -401,5 +441,6 @@
 <script src="js/settings.js"></script>
 <script src="js/game.js"></script>
 <script src="js/medium.js"></script>
+<script src="js/hard.js"></script>
 </body>
 </html>

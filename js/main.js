@@ -110,6 +110,7 @@ document.querySelectorAll("button[data-action]").forEach((b) => b.addEventListen
   else if (a === "tutorial") openTutorial();
   else openModal(SCREENS[a].title, SCREENS[a].html);
 }));
+<<<<<<< HEAD
 $("tutorial-back").addEventListener("click", () => {
  Sfx.confirm();
  if (tutorialSlide > 1) {
@@ -142,13 +143,18 @@ tutorial.querySelectorAll("[data-tutorial-confirm]").forEach((button) => button.
  $(`tutorial-${group}-status`).textContent = `${selected.dataset.label} siap digunakan!`;
  Sfx.confirm();
 }));
+=======
+
+>>>>>>> 11b61f98c9b5f318cf7e3ccda84a57eecf80693a
 document.querySelectorAll("button[data-level]").forEach((b) => b.addEventListener("click", () => {
   const l = b.dataset.level;
   Sfx.confirm();
   if (l === "Easy") { startGame(); return; }
   if (l === "Medium") { startGame2(); return; }
+  if (l === "Hard") { startGame3(); return; }
   openModal("Mode " + l, `<p style="text-align:center">${LEVELS[l]}</p><p style="text-align:center">Segera hadir…</p>`);
 }));
+
 document.querySelectorAll(".btn").forEach((b) => b.addEventListener("mouseenter", () => Sfx.beep(520, "square", .04)));
 $("modal-close").addEventListener("click", closeModal);
 modal.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
